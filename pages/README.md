@@ -1,9 +1,15 @@
 pages
 =====
 
-Java code I use to find the fiction, nonfiction, poetry, and drama in a collection, while separating those body text genres from genres of paratext (bookplate, table of contents, index, publisher's advertisements). It’s designed to divide texts at the page level; divisions below the page level can be made later (in cases where they really matter for macroscopic research -- e.g. prose footnotes in volumes of poetry). 
+Java code that does classification at the page level, while preserving the organization of pages in volumes, and using information about volume-level structure to guide page-level inference.
 
-The goal here is only a provisional map to support macroscopic research; 95% accuracy is a reasonable target. Right now we’re at roughly 92% accuracy. (In a single-label multiclass situation, accuracy is the same as microaveraged F1.)
+I've used this code to find the fiction, nonfiction, poetry, and drama in 854,000 HathiTrust volumes, while separating those body text genres from genres of paratext (front matter, back matter, publisher's advertisements). However, the workflow for that task is complex; this is not a general-purpose "tool" that could simply be pointed at another collection in order to accomplish the same thing. For instance, the models of genre produced by this code depend on training data; we had to manually tag the pages of 414 volumes with genre information. Training data is inevitably collection-specific.
+
+Instead of viewing this as a tool, it's probably more realistic to view it as a set of useful models for people who are interested in accomplishing something similar.
+
+Fuller documentation is contained in the project report (link TBA).
+
+This code was originally developed [in a different repo, which you should consult if you're curious about its commit history.](https://github.com/tedunderwood/pages)
 
 The package works by training regularized logistic classifiers whose predictions are then smoothed with a hidden Markov model of volume structure. [See the article.](http://arxiv.org/abs/1309.3323) Weka is a dependency. Originally based on the repo pagelevelHMM, this repo is changed in several major ways:
 
