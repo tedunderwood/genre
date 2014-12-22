@@ -44,6 +44,7 @@
 \hypersetup{colorlinks=true,urlcolor=blue, linkcolor = blue, citecolor = blue}
 \usepackage{float}
 \usepackage{placeins}
+\usepackage{booktabs}
 
 %%% Custom sectioning
 \usepackage{sectsty}
@@ -87,6 +88,7 @@
 
 %%% Begin document
 \begin{document}
+
 \maketitle
 \thispagestyle{empty}
 \newpage
@@ -148,7 +150,7 @@ Even if genre was reported reliably at the volume level, it might not be enough 
 This project proposed to show scholars how to map genre algorithmically in large digital libraries, and to actually generate a page-level map of a million English-language volumes from 1700 to 1949. So far, we have achieved the goal for 854,464 non-serial volumes from 1700 to 1923. But we still plan to extend the map to 1949, and will do so as soon as HathiTrust Digital Library releases information about word counts in volumes beyond 1923; that release is currently delayed while a final layer of concerns about security and intellectual property law are addressed, but we expect it to take place in Spring 2015.
 
 \subsection{Deliverables.}
-Work on this grant has had a number of important consequences, including publications~\cite{underwood:mutable, underwood:blurry, underwood:slate}, and code that is freely available on the web. But the deliverable of most interest to literary scholars will probably be the sets of page-level metadata we have produced. In particular, we have defined \textbf{collections of poetry, fiction, and drama, 1700-1923, that are more than 97\% precise} (that is, fewer than 3\% of the pages in the collection will come from some other genre). Maximizing recall is more challenging, but we can certainly improve the current situation (recall of 30-40\%). Depending on the genre, we can get recall of 74-95\% while retaining very high precision; scholars who are willing to accept reduced precision can get recall above 87\% for all genres.
+Work on this grant has had a number of important consequences, including publications~\cite{underwood:mutable, underwood:blurry, underwood:slate}, and code that is freely available on the web~\cite{underwood:genrerepo}. But the deliverable of most interest to literary scholars will probably be the sets of page-level metadata we have produced. In particular, we have defined \textbf{collections of poetry, fiction, and drama, 1700-1923, that are more than 97\% precise} (that is, fewer than 3\% of the pages in the collection will come from some other genre). Maximizing recall is more challenging, but we can certainly improve the current situation (recall of 30-40\%). Depending on the genre, we can get recall of 74-95\% while retaining very high precision; scholars who are willing to accept reduced precision can get recall above 87\% for all genres.
 
 \subsection{What is genre, and can it be mapped at all?}
 Centuries of literary scholarship have failed to produce human consensus about genre. So scholars are likely to view the notion that genre can be mapped by computers very skeptically indeed.
@@ -214,7 +216,7 @@ This section provides a brief summary. Details of particular problems are explor
 
 We began by obtaining full text of all public-domain English-language works in HathiTrust between 1700 and 1922. Organizing a group of five readers, we asked them to label individual pages in a total of 414 books; this produced our training data. We transformed the text of all the books into counts of features on each page; most of these features were words that we counted, but we also recorded other details of page structure. Drawing on the Weka machine-learning library, we wrote software that trained a regularized logistic model for each genre, using a one-versus-all method (each genre was contrasted to all the other genres collectively). Then we tested the models by cross-validating them (in other words, we asked the models to make predictions about the pages of unseen volumes that had been held out from the training set). Because page sequence contains important information (a page sandwiched between two pages of fiction is likely to be fiction), we also trained a hidden Markov model on page sequences in our training set, and used that model to smooth page-level predictions in the test set. We assessed accuracy by looking at the proportions of pages and words accurately classified in each genre.
 
-After trying many different combinations of features and algorithms (see ``Lessons Learned'' below for an exhaustive list) we were convinced that regularized logistic regression was the best solution for our purposes, and we settled on a list of 1061 features that maximized predictive accuracy (these included 1036 words and 25 ``structural features'' that reflect other information about a page or a volume).
+After trying many different combinations of features and algorithms (see ``Lessons Learned'' below for an exhaustive list) we were convinced that regularized logistic regression was the best solution for our purposes, and we settled on a list of 1062 features that maximized predictive accuracy (these included 1036 words and 26 ``structural features'' that reflect other information about a page or a volume).
 
 We had originally planned to train different models for each century, and transition gradually between them. But in practice we found that it worked better (for the relatively stable categories we were modeling) to sacrifice historical specificity and just use as much training data as we could. For reasons more logistical than philosophical, we did train two slightly different models, one covering the period 1700-1899 and one covering 1725-1922; we used the latter model to make predictions about volumes between 1900 and 1922. Predictions for each volume were saved as a separate JSON file.
 
@@ -226,9 +228,16 @@ We recorded degrees of confidence for all 854,464 volumes we mapped. A researche
 
 This was probably the most questionable aspect of our methodology, and an area we will give more attention as we expand into the twentieth century.
 
-There are two basic problems. One is that labeling individual pages is simply a labor-intensive process. There are ways to abbreviate it a little. We built a page-tagging utility that gave research assistants a GUI to make the process a little smoother.
+There are two basic problems. One is that labeling individual pages is simply a labor-intensive process. There are ways to abbreviate it a little. We built a page-tagging utility that gave research assistants a GUI to make the process a little smoother (\url{https://github.com/tedunderwood/genre/tree/master/browser}).
 
-The second problem was more fundamental: it's that the categories of most interest to our project represented a distinct minority of volumes. Nonfiction comprises more than three-quarters of the HathiTrust collection in the period 1700-1922. Poetry, drama, and fiction together make up about 21\% of volumes; most of that is fiction. So if we selected training examples completely at random, we would have tagged mostly nonfiction. The imbalanced ratio between genres might not itself have been a problem, but since this is a labor-intensive process and the total number of volumes we can tag is quite limited, the absolute numbers of volumes tagged in poetry and drama would have been very low. That would have been problematic.
+\begin{figure}[!h]
+\centering
+\includegraphics[width=\textwidth]{images/genreproportions}
+\caption{Estimated proportions of four genres in English-language volumes 1700-1922.}
+\label{genreproportions}
+\end{figure}
+
+The second problem was more fundamental: it's that the categories of most interest to our project represented a distinct minority of volumes. How much of a minority, exactly, is something that we didn't know when we began. But having completed a mapping of genres, we can now estimate that nonfiction comprises more than three-quarters of the HathiTrust collection in the period 1700-1922. Poetry, drama, and fiction together make up about 21\% of volumes; most of that is fiction. So if we selected training examples completely at random, we would have tagged mostly nonfiction. The imbalanced ratio between genres might not itself have been a problem, but since this is a labor-intensive process and the total number of volumes we can tag is quite limited, the absolute numbers of volumes tagged in poetry and drama would have been very low. That would have been problematic.
 
 The problem of ``imbalanced classes'' is a well-recognized one in machine learning, and several papers have shown that it's not necessary for training data to mirror the original proportions of classes~\cite{japkowicz:imbalance}. Better results can sometimes be achieved by sampling equal numbers of instances in every class~\cite{weiss:imbalance}. We accordingly sought to sample roughly equal numbers of volumes in poetry, prose fiction, drama, and prose nonfiction, while also ensuring that our training examples were distributed evenly across time. (The dataset is strongly skewed toward the end of the timeline, so random sampling across time would have produced very few examples for discriminating genres in earlier periods.)
 
@@ -246,7 +255,7 @@ Another potential problem with our sampling strategy is that ``nonfiction'' cove
 
 We explicitly did not set out to create an all-purpose taxonomy of genres. Since there's a strong tendency to assume that taxonomy is or ought to be the goal of all research on genre, the disavowal probably needs to be repeated and underlined. \textit{A general ontology that could serve as a shared standard, with a genre for everything and everything in one specific genre, is what we did not attempt to create or believe we could create.}
 
-Instead, our research was organized by the specific goal of separating a few broad categories that literary critics do in practice tend to separate: prose fiction, drama, and poetry. We lumped or split other categories as necessary in order to improve predictive accuracy on our literary targets. For instance, bibliographies and publishers' advertisements are actually very different things. But when reduced to feature sets they look pretty similar (they have lots of capitalized lines, and words like "vol" and "8vo"). We accordingly lumped these categories together, because that turned out to make it easier for our model to recognize both forms of paratext. On the other hand, we separated biographies and autobiographies from other forms of nonfiction, because that separation allowed us to better model the especially challenging boundary between biography and prose fiction.
+Instead, our research was organized by the specific goal of separating a few broad categories that literary critics do in practice tend to separate: prose fiction, drama, and poetry. We lumped or split other categories as necessary in order to improve predictive accuracy on our literary targets. For instance, bibliographies and publishers' advertisements are actually very different things. But when reduced to feature sets they look pretty similar (they have lots of capitalized lines, and words like "vol" and "8vo"). We accordingly lumped these categories together, because that turned out to make it easier for our model to recognize both forms of paratext. On the other hand, we separated biographies and autobiographies from other forms of nonfiction, because that separation allowed us to better model the especially challenging boundary between biography and prose fiction. (We borrowed the general idea of lumping and splitting categories strategically from practice at Google~\cite{sculley:adversarial}.) 
 
 Because we knew that decisions about lumping and splitting would be contingent on predictive accuracy, we didn't attempt to make these decisions while gathering training data. Instead we recorded a relatively long list of detailed categories (anything we thought we \textit{might} need to separate) and then decided later how to group them for purposes of classification.
 
@@ -382,7 +391,7 @@ The only part of this that might be novel or interesting for computer scientists
 
 There are a variety of clever approaches that might be tried to coordinate page-level predictions with knowledge of volume structure. We trained a hidden Markov model, which is is a relatively simple approach. The model contains information about the probability of transition from one genre to another, so it is in a sense a model of volume structure. But in practice, its main effect is to smooth out noisy single-page errors---for instance, it was good at catching a few isolated pages misclassified as nonfiction in the middle of a novel. We added a bit more sophistication with an ad-hoc rule that relaxed the model slightly whenever it encountered a blank page (or actually, a page with fewer than five words). This reflected the reality that blank or nearly-blank pages often represent divisions between volume parts, so the genre probabilities on either side of such a page should propagate only weakly across the boundary. This was a relatively minor change, but it did improve performance.
 
-More sophisticated approaches to volume structure, using conditional random fields, or a maximum-entropy Markov model, ought to improve results. For instance, our HMM was effectively only using information about a few pages on either side of a given page to smooth predictions. But information about the whole volume should also be useful. We did a lot of experimentation with other approaches here, but weren't able to find a solution that actually improved on the HMM reliably, in a cross-validated test. Part of the problem is that volume structure turns out to be a little more unpredictable than one might have anticipated: there are a lot of strange miscellanies out there. However, the striking success of our volume-level confidence metrics shows that there is useful information to be extracted at the volume level, if one could find the right way to apply it back to page-level inference.
+More sophisticated approaches to volume structure, using conditional random fields, or a maximum-entropy Markov model, ought to improve results by reflecting more kinds of volume-level information. We did experiment with other approaches here, but weren't able to find a solution that actually improved on the HMM reliably, in a cross-validated test. However, the striking success of our volume-level confidence metrics shows that there is more useful information to be extracted at the volume level, if one could find the right way to apply it back to page-level inference.
 
 \subsection{Divisions below the page level.}
 
@@ -392,22 +401,149 @@ Our decision to divide volumes at the page level isn't meant to imply that all t
 
 Other page-level issues (running headers, for instance) may require different methods, and some of the issues are not going to affect enough text to pose a real problem for distant reading. Running headers can matter, because the words involved get repeated many times. But if a four-hundred-page book gives way to an index midway through the final page, we can probably live with the noise. Distant reading is not scholarly editing.
 
-\section{Results.}
+\section{Page-level results.}
+
+We trained two different models, one that we used for the period 1700-1899, and one that we used for volumes dated 1900-1922. In the pages that follow we present confusion matrices for both models. But actually, the differences between them are relatively minor.
+
+Influenced by a blog post written by Michael Witmore, the original proposal for this grant considered a range of different ways to allow definitions of genre to change  over time~\cite{witmore:time}. For instance, it's possible to predict genre with multiple models trained in different periods, and then adjust the relative weights of their votes to reflect the date of each document, creating a continuous gradient between different models. We briefly demonstrated a version of this approach in an early article exploring methods~\cite{underwood:mutable}.
+
+But in the end we didn't actually find historical specificity very useful for the genres we've emphasized in this report (poetry, drama, prose fiction). When we attempted to train models that focused on a particular century, we always found that they were less accurate than models covering a two-century timeline. There are at least three possible explanations for this.
+
+\begin{itemize}
+\item Broad genres like ``poetry'' are not actually very volatile in the period covered here.
+\item Since HathiTrust volumes are dated by year of publication rather than year of composition, every year contains reprints from a wide range of earlier years, and you need a wide range of training data to handle this diversity.
+\item Historical specificity might become useful with larger amounts of training data. But given the limited amount of data we had, it was simply never a good idea to cut it in half.
+\end{itemize}
+
+We don't have evidence yet that would allow us to decide between those explanations. In the end we did train two different models covering slightly different spans of time, but this decision was shaped mainly by the difficulty of managing a complex workflow and terabytes of data. (We hadn't absorbed the 1900-1922 data yet at the time we ran the first model.)
+
+\begin{figure}[!h]
+\centering
+\includegraphics[width=\textwidth]{images/confusion1}
+\caption{Confusion matrix for the first model, five-fold cross validation.}
+\label{confusion1}
+\end{figure}
+
+Confusion matrices are presented here in the form we actually used to tune the models. The numbers in each cell are numbers of words. For instance, in cross-validation this model misclassified 3,019 words that were actually drama as paratext. It correctly classified 6,773,616 words of drama. These word counts are generated simply by assigning all the words on each page to the genre associated with the page; we haven't actually attempted divisions below the page level. But it made sense to count words in the tuning process, because errors about blank or nearly-blank pages are less important than errors about text.
+
+The microaveraged F1 measure reported in the yellow cell is, in effect, simply accuracy: the overall number of pages assigned to the correct genre.
+
+Although we trained separate models for ``biography'' and ``nonfiction,'' we treated both models as a vote for nonfiction when estimating accuracy. We weren't after all trying to distinguish biographies from other forms of nonfiction, we were just training multiple models as a way of capturing the fiction/nonfiction boundary more precisely. The same logic governed front matter, back matter, and advertisements. We trained three separate models, but in practice we counted all three of them as a vote for the broader category of ``paratext.''
+
+Overall accuracy declined very slightly in the second model, trained on data from 1725 to 1922. It's difficult to say whether there is actually much significance to this; it could easily be random noise in the training data.
+
+\begin{figure}[!h]
+\centering
+\includegraphics[width=\textwidth]{images/confusion2}
+\caption{Confusion matrix for the second model, five-fold cross validation.}
+\label{confusion2}
+\end{figure}
+
+Paratext was consistently the hardest problem. Advertisements and indexes can be difficult to distinguish from nonfiction, and title pages may sometimes look like poetry. We can claim to have significantly reduced the amount of paratext mixed into literary genres, but not to have eliminated it altogether.
+
+\subsection{Details of models.}
+
+One advantage of regularized logistic regression is that it's extremely interpretable; sample model coefficients have been saved in the project repo under the /models folder.
+
+A model with 1062 features depends on a lot of different factors, and it's somewhat misleading to extract a few that happen to be at the top or bottom of a list. Sometimes a single feature becomes important in effect as a counterweight against lots of others. But it may be interesting to note features that were unexpectedly important in particular genres.
+
+The features most strongly predictive of fiction were structural features (typeTokenSqrd, typeToken, totalWords, lineLengthRatio). Also ``the,'' ``my,'' ``you,'' ``said,'' and ``her.'' The features that argued most strongly against fiction were Arabic numbers.
+
+The features most strongly predictive of poetry were, again, structural (typeToken, capRatio, wordRatio, totalWords, and endWithPunct). A wide range of words that might be categorized as poetic diction were also predictive (``doth,'' ``songs,'' ``sweet,'' etc.) Features arguing most strongly against poetry were structural (exclamationsNorm, wordsPerLine, typeTokenSqrd, logTypeToken). It's interesting that typeToken appears on opposite sides of this model, depending on the way it's transformed or normalized.
+
+Features strongly predictive of drama were stage directions (``enter,'' ``exit,'' ``exeunt''), terms like ``scene'' and ``act,'' as well as a different set of structural features (startWithRubric, wordRatio, and startWithName). A motley set of features, hard to generalize, argue against drama, but past-tense verbs of speech like ``exclaimed'' and ``said'' stand out; generally, past-tense verbs of speech characterize fiction.
+
+Regularization was relatively light in these models; a ridge parameter of around .002 maximized accuracy.
+
+\section{Evaluating, and further improving, results.}
+
+As indicated in Figure \ref{badconfusion}, volume-level metadata had originally been so spotty that recall for nineteenth-century fiction, poetry, and drama would be less than 40\% if you relied on it. It's not at all hard for algorithmic methods to improve on that level of recall! The confusion matrices in figures \ref{confusion1} and \ref{confusion2} show that page-level classification raised recall to 86-96\% while keeping precision reasonably high (it ranged from 90\% for poetry to 94-96\% for drama and fiction).
+
+These are pretty good results overall, especially if you care equally about precision and recall. The potential problem is that literary scholars may \textit{not} care equally about those factors. When we focus on a genre, we're used to working with very small collections that implicitly exclude most of what was published (they have terrible recall), but that include almost no false positives (they have very high precision). Whether these habits are good or bad, they are likely to shape disciplinary norms. It seems likely, for instance, that many scholars will be unwilling to work with a collection of poetry that contains up to 10\% noise, even if it improves recall.
+
+So it seemed important to give scholars a way of raising precision. One obvious way to do this was to filter results at the volume level. This made sense especially because we knew that there was volume-level information not fully exploited in our page-level model. For instance, pages assigned to a particular genre were especially likely to be errors when they occurred in a volume where that genre comprised only a small portion of pages overall. We had tried, without success, to use this sort of information to improve page-level predictions. But we knew it could be used somehow.
+
+Our solution was to create confidence metrics by training new models on the sets of predictions created by our page-level classifier. A wide range of modeling strategies were explored; the most effective was to train a logistic model in order to predict \textit{the probability that a volume's accuracy would be greater than a fixed threshold T.} (Attempting to model accuracy as a linear function was less effective, probably because it's not a linear function.) We trained models to predict both the overall accuracy of genres assigned to pages and the levels of precision in particular genres (poetry, fiction, and drama). For instance, a volume with only five pages of fiction may have high accuracy overall, but since those five pages are likely to be errors, its predictions about fiction are likely to have low precision.
+
+The predictive features used were:
+\begin{itemize}
+\item A flag that indicates whether volume-level metadata coincides with the majority of page-level predictions. In the case of genre-specific metrics, this flag reported specifically whether volume-level metadata coincided with that genre.
+\item Another metadata flag indicating whether volume-level metadata specifically controverted page-level predictions. We needed two flags because there's also the (very common) case where metadata tells you nothing at all.
+\item The percentage of pages in the most common genre (for the overall accuracy metric). In genre-specific precision metrics, this feature was supplemented by another reporting the percentage of pages in the genre of interest.
+\item The percentage of times genre predictions ``flipped'' in the raw predictions (before smoothing by HMM). Proceeding through pages sequentially, a ``flip'' is a change of genre as we move from page n-1 to page n. Volumes with small groups of pages flipping back and forth frequently between genres were likely to contain lots of errors. This was reported as a percentage (normalized by the total number of pages).
+\item The absolute number of times genre predictions ``flip'' in the final predictions (after smoothing by HMM). This number was not normalized.
+\item The average gap between most-likely-genre and second-most-likely genre in the probabilistic predictions made by page-level models.
+\item The average probability of the most-likely-genre in the probabilistic predictions made by page-level models.
+\end{itemize}
+
+We trained these models of confidence on our full collection of training data (414 volumes). Then we examined the subsets of training data that would be produced by using various settings of the confidence metrics for particular genres as a threshold to filter out volumes. This allowed us to plot a relationship between precision and recall in particular genres. Because 414 volumes is after all not a huge set, the resulting curves had a jagged granularity caused by single incidents of exclusion or inclusion; we smoothed them conservatively with a loess function. The curve for fiction is plotted in Figure \ref{ficprecall}.
+
+\begin{figure}[!h]
+\centering
+\includegraphics[width=\textwidth]{images/ficprecall}
+\caption{Precision-recall graph for fiction datasets limited to various thresholds of confidence.}
+\label{ficprecall}
+\end{figure}
+
+Each dot here indicates the precision and recall to be expected in a dataset limited to volumes at or above a given confidence threshold. The large red dot indicates the threshold we actually chose to produce a filtered fiction dataset. Our model assigned a confidence threshold of 0.50 to a volume if it expected that particular volume's predictions about fiction to have a 50\% chance of being more than 80\% precise. But practice, if you construct a dataset with \textit{all} volumes at this threshold \textit{or higher}, you get 95.9\% precision with 83.8\% recall (since most of the volumes included in that dataset will, after all, have a confidence metric much higher than 0.50).
+
+The dramatic ``elbow'' in this curve suggests that there's a lot to be gained by filtering at the volume level. As we start to raise the confidence threshold, we initially get a lot of gain in precision with very little loss of recall. The volumes we're discarding, in other words, mostly contained pages mistakenly predicted to be fiction. After rising through the elbow, the situation reverses: we start to lose recall rapidly with minimal gains in precision. At this point we're uselessly discarding actual fiction. A threshold located on the elbow arguably gives you the best deal.
+
+In the case of poetry, the situation isn't quite as pretty, because the elbow is located at a lower point in the graph, and we were concerned that it might not provide enough precision for researchers (see Figure \ref{poeprecall}). We accordingly pushed the confidence threshold for poetry in our pre-packaged dataset a little higher, to a point beyond the elbow in the graph. However, the key thing to realize is that we've incorporated these curves in the JSON metadata for all volumes where we predicted any pages of poetry, drama, or fiction. So if a researcher is concerned, say, that our filtered dataset excludes too much poetry, they can relatively easily recreate their own filtered dataset with a confidence threshold designed to create the precision-recall tradeoff they feel most appropriate.
+
+\begin{figure}[!h]
+\centering
+\includegraphics[width=\textwidth]{images/poeprecall}
+\caption{Precision-recall graph for poetry datasets limited to various thresholds of confidence.}
+\label{poeprecall}
+\end{figure}
+
+\subsection{Pre-packaged datasets.}
+
+To make it easier for researchers to profit from volume-level filtering, we have created pre-packaged datasets of poetry, drama, and fiction, using relatively high confidence thresholds. Looking at these datasets, we also realized that manual filtering could improve things a bit further. It would be impossible to manually tag genres in 276 million pages, but once you have a pretty-good list of 100,000 fiction volumes, it's actually not hard to find a few hundred obvious ringers. One of the strategies we used was to sort the volumes by size and scan the titles of the largest volumes. This was effective both because oddly large volumes tended to be things like encyclopedias, dictionaries, Congressional reports, etc. that didn't belong in the list, and because it meant we were likely to catch \textit{big} errors---a relatively effective use of our limited time and energy.
+
+Since predictions about precision based on a training set of 414 volumes are not necessarily to be trusted very far in a collection of 854,000 volumes, we also confirmed precision by randomly sampling 300 pages from each filtered dataset. We stratified each sample to get 100 pages from each century, because we also wanted to ensure that precision wouldn't vary dramatically across time (10\% noise that varies across time can, actually, be worse than 15\% that doesn't). In Table \ref{filteredtable}, we report predicted precision, predicted recall, and observed precision ranges across all centuries of the dataset.
+
+\vspace{5mm}
+\begin{table}[h]
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+\textbf{Genre}   & \textbf{Threshold} & \textbf{Pred. precision} & \textbf{Pred. recall} & \textbf{Observed precision} \\ \midrule
+\textbf{drama}   & 0.66               & 98.7                     & 94.9                  & 97-100                      \\
+\textbf{fiction} & 0.50               & 95.9                     & 83.8                  & 96-99                       \\
+\textbf{poetry}  & 0.70               & 93.9                     & 73.6                  & 97-99                      
+\end{tabular}
+\label{filteredtable}
+\end{table}
+\vspace{5mm}
+
+Precision is generally higher than predicted because of manual filtering. (Without that filtering it would probably have been slightly lower than predicted; researchers who want to create their own filtered datasets are advised to also exclude volumes from the list of ``ringers'' we have provided.) The ``observed precision'' column is reporting the range of precisions observed in all three centuries. For fiction, eighteenth-century precision was lowest, but for drama the low point was the nineteenth century, and for poetry it was the twentieth. Since the eighteenth century is quite a small part of the dataset, you may get a better sense of overall precision by considering only the period 1800-1922. For drama, precision in this period would be 98.5\%; for fiction it would be 97.5\%; for poetry it would be 98\%.
+
+\section{How to use this data.}
+
+We believe these filtered datasets represent a new and valuable resource for distant readers. They are large (18,111 vols of drama, 102,349 vols of fiction, 61,286 vols of poetry). And they point to public-domain volumes in HathiTrust Digital Library; once HathiTrust Research Center has completed page-level feature extraction, it will be possible for anyone to download page-level feature counts and MARC records for the whole collection.
+
+For good or ill, these datasets are also significantly different from the kinds of collections researchers tend to construct from bibliographies or acquire from vendors. Those datasets are often keyed to date of composition or first publication, and contain only one record for each work. HathiTrust, by contrast, is an aggregation of university libraries; popular works are often represented by multiple editions and reprintings scattered across time. That could be an advantage or a disadvantage, depending on your research goal.
+
+No single collection of works is universally representative, because there are a range of different things a literary historian might want to represent. What were authors writing in 1871? What were people in a given class (or gender, or race) reading in 1871? What was getting reviewed? What was getting bought by libraries? These are all valid questions. In its raw form, HathiTrust probably comes closest to answering the last of them. But HathiTrust is also a very large collection, which means that researchers have a lot of scope to select subsets and rebalance the collection as they see fit. In many cases, scholars may want to work with multiple collections from different sources, contrasting and comparing them in order to see whether a particular pattern visible in one corpus also holds true in corpora selected differently. A sampling of volumes in university libraries might be one of those sources, but it's not likely to be the only one.
+
+\subsection{Particular problems.}
+HathiTrust is growing all the time, and it now contains more eighteenth-century volumes than are contained in this (two-year-old) snapshot. But I would be a little wary about relying on these datasets, at any rate, for coverage of the early eighteenth century. There are probably better resources.
+
+Up to about 1820, it's also necessary to be aware of the dangers posed by OCR on old typefaces, especially the notorious ``long S.'' This is not by any means an insuperable obstacle, but it's something to be aware of. We corrected OCR before running our classification workflow, and may eventually distribute word counts for those corrected texts.
+
+Special caution is also necessary where drama is concerned. In fiction and poetry, reprints affect the overall trajectory of the corpus only to a moderate extent; we've compared this collection to smaller collections of first editions, and the differences are not particularly shocking. The case of drama may be different, because Shakespeare, and other Elizabethan dramatists, make up a large proportion of the drama bought by universities in this period.
 
 \section{Lessons learned.}
 
-Researchers are frequently advised to record failures and blind alleys as well as successes. Taking that advice to heart, Underwood kept a running list during the project. We did encounter a lot of blind alleys, and a record of them might be useful.
+Researchers are frequently advised to record failures and blind alleys as well as successes. Taking that advice to heart, the PI of this project kept a running list. We did encounter a lot of blind alleys, and a record of them might be useful for literary scholars attempting any large data mining project.
 
 \subsection{Things that were absolutely worth the effort.}
 \begin{itemize}
 
-\item \textit{Building a GUI to streamline production of training data.} This was accomplished by Michael L. Black and Boris Capitanu; it took a great deal of work, but it was worth the early investment of time. In particular, it was useful for the GUI to permit ``rapid page-flipping'' in situations where you know the next 400 pages are going to have the same genre.
+\item \textit{Building a GUI to streamline production of training data.} This took a great deal of work by Michael L. Black and Boris Capitanu. But it was worth the early investment of time. In particular, it was useful for the GUI to permit ``rapid page-flipping'' in situations where you know the next 400 pages are going to have the same genre.
 
-\item \textit{Organizing research assistants to tag overlapping portions of the corpus, so that we could assess inter-rater agreement.} This took about a semester of work; organizing group effort is time-consuming. It was definitely not the most efficient way to generate training data. In fact, crowdsourcing the task probably slowed down the production of training data, relative to what a single researcher could have produced in the same period. However, it was definitely worthwhile to get an estimate of human dissensus about the genres we were mapping.
-
-\item \textit{Acquiring new hardware.} Because we were training models at the page level, our training sets had more than 100,000 instances, and we were often using more than 1000 features. Cross-validation often took several hours, and processing speed was at times definitely a bottleneck for the research workflow. Without reasonably good hardware, it would been a bigger problem. Grant support provided access to a 6-core MacPro as well as to campus cluster computing; in practice, we trained models locally on the MacPro and used the cluster to apply those models predictively across the whole collection.
-
-\item \textit{Parallelizing software.} Multi-core hardware is only useful if your software takes advantage of it. Weka doesn't automatically parallelize logistic regression, so Underwood wrote Java code to parallelize at a higher level, training models for different genres concurrently.
+\item \textit{Parallelizing software.} Multi-core hardware is only useful if your software takes advantage of it. Weka doesn't automatically parallelize logistic regression, so Underwood wrote Java code to parallelize at a higher level, training models for different genres concurrently. This mattered, because you do a lot of trial and error, and it matters whether each trial takes two hours or four.
 
 \item \textit{Training volume-level models of confidence on top of the underlying model.} These occurred to us only at a late stage of the process, but they were valuable. After banging one's head against a wall for months trying to optimize the overall accuracy of the page-level model, it was a relief to discover how much easier it was to improve precision by trading away small amounts of recall.
 
@@ -415,13 +551,15 @@ Researchers are frequently advised to record failures and blind alleys as well a
 
 \item \textit{Hadoop.} We spent part of a summer on this, and for our problem it wasn't worth the effort. If you had >5TB of data, it might start to be necessary. But that's pretty uncommon for humanistic problems. With 2TB of data, you're better off parallelizing across lots of flat files.
 
-\item \textit{Cutting-edge algorithms.} We tried support vector machines and random forests as well as logistic regression. SVMs are usually the gold standard for text classification, and it's probably true that an exhaustive grid search would eventually reveal settings where the SVM outperforms our regularized logistic model. However, a quick grid search didn't reveal those settings. And in a complex workflow with a lot of moving parts, we didn't feel it was worthwhile to rely on algorithms that might require a week of tuning every time some other aspect of the workflow changed. Logistic regression was robust, and had the advantage of being eminently interpretable.
+\item \textit{Cutting-edge algorithms.} We tried support vector machines and random forests as well as logistic regression. SVMs are usually the gold standard for text classification, and it's probably true that an exhaustive grid search would eventually reveal settings where the SVM outperforms our regularized logistic model. However, a quick grid search didn't reveal those settings. And in a complex workflow with a lot of moving parts, we didn't feel it was worthwhile to rely on algorithms that might require a week of tuning every time some other aspect of the workflow changed.
 
-\item \textit{Fancy ensembles.} There's something deeply attractive about ensemble learning, and we had really hoped to produce a solution that would involve an ensemble of different algorithms, with different feature sets. We spent the better part of a month combining random forests with logistic regression in various ways. However, in the end it turned out that logistic regression with a relatively large feature set was the best solution; the various forms of boosting and bagging we tried didn't actually improve performance. However, we didn't try a fully systematic implementation of AdaBoost; given enough time, it's possible that would help. Also, our approach to the multiclass problem did technically involve an ensemble of classifiers, one for each genre.
+\item \textit{Complex ensembles.} There's something deeply attractive about ensemble learning, and we had really hoped to produce a solution that would involve an ensemble of different algorithms, with different feature sets. We spent the better part of a month combining random forests with logistic regression in various ways. However, in the end it turned out that logistic regression with a relatively large feature set was the best solution; the various forms of boosting and bagging we tried didn't actually improve performance.
 
 \item \textit{Sophisticated approaches to the multiclass problem.} Most classification algorithms are designed to make a binary prediction; if you want to choose between more than two possible classes, you have to find a way of organizing binary predictors to ``vote'' about a multiple-choice question~\cite{allwein:multiclass}. For instance, you could training one classifier for each class, contrasting it to the examples of all other classes, or train one classifier for each class \textit{boundary} (fiction-against-poetry, fiction-against-front-matter, fiction-against-drama, and so on). The first strategy is sometimes called one-vs-all; the second, all-versus-all. There are also further refinements~\cite{dieterrich:multiclass}. The secondary literature  is rather confusing here; a number of articles acknowledge that one-versus-all is commonly used, but then propose that some other more refined solution is better~\cite{allwein:multiclass}. No doubt that's sometimes true. However, for our use case we found that one-vs-all worked best, and there is some theoretical support for the notion that it's a robust solution~\cite{rifkin:multiclass}.
 
-It also allowed them to do rapid page-flipping in some situations. For instance, in certain books it becomes clear around page ten that the next five hundred pages are all going to belong to the same genre (fiction, nonfiction, or what have you). So our page tagger includes a ``scan forward'' feature that advances rapidly through a page range, stopping only if it encounters a significant change in page format. (We assessed this by comparing the percentage of lines with initial capitals in the next page to pages previously scanned. In practice, this tends to catch major unexpected shifts, e.g. from prose to poetry or paratext.)
+\item \textit{Active learning. Co-training.}
+
+\item
 
 \end{itemize}
 
