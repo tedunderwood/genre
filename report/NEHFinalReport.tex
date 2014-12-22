@@ -110,7 +110,7 @@ The genre metadata we have created are available through HathiTrust Research Cen
 Mapping a broad category like ``prose fiction'' is of course only a starting point for distant reading. The methods we describe here can also be used to select collections as specific as ``detective fiction'' or ``verse tragedy.'' However, as we descend from broad categories to subgenres, critical consensus about the list of categories to be mapped becomes less stable. Moreover, while poetry and prose fiction can be treated for the most part as exclusive sets, the subgenres within them definitely cannot (e.g. nothing prevents a gothic novel from also being science fiction). This actually simplifies the problem of classification, since categories that are free to overlap can be studied independently. In other words, as we move down the spectrum of sizes, the problem named by ``genre'' ceases to be a taxonomic question and becomes a largely folksonomic one\cite{vanderwal:folksonomy}. This sort of problem requires a different approach: instead of attempting to provide a map of subgenres (or even a controlled vocabulary), we've limited our intervention to methodological suggestions, supported by a case study and sample code.
 
 \section{Project staff.}
-Ted Underwood was PI on this project; he is the author of this report, and he wrote most of the code used for genre classification, drawing on machine learning libraries in Python (scikit-learn) and Java (Weka). His time on this project was additionally supported by an ACLS Digital Innovation Fellowship.
+Ted Underwood was PI on this project; he is the author of this report, and he wrote most of the code used for genre classification, drawing on machine learning libraries in Python (scikit-learn) and Java (Weka)~\cite{scikit-learn, weka}. His time on this project was additionally supported by an ACLS Digital Innovation Fellowship.
 
 Boris Capitanu is a Research Programmer at the NCSA; he worked with HTRC to design their feature-extraction workflow, and developed web tools for this project as well as a page-level tagger we used to create training data.
 
@@ -441,6 +441,8 @@ Overall accuracy declined very slightly in the second model, trained on data fro
 
 Paratext was consistently the hardest problem. Advertisements and indexes can be difficult to distinguish from nonfiction, and title pages may sometimes look like poetry. We can claim to have significantly reduced the amount of paratext mixed into literary genres, but not to have eliminated it altogether.
 
+It may also be worth comparing these results to the initial results we reported in Summer 2013~\cite{underwood:mutable}. At that point, with a training set of 100 volumes, microaveraged F1 was 89.4\%. It took about six months of work to get that up to 93.5\% (averaging both models). We did it partly by quadrupling the amount of training data, and partly by fine-tuning feature selection and feature engineering. I think that was worth doing, but I don't think it would be a good idea to spend a great deal more time optimizing this phase of the process. During the last month of labor, we tried a lot of clever ideas, but progress was in reality fairly stationary.
+
 \subsection{Details of models.}
 
 One advantage of regularized logistic regression is that it's extremely interpretable; sample model coefficients have been saved in the project repo under the /models folder.
@@ -456,6 +458,7 @@ Features strongly predictive of drama were stage directions (``enter,'' ``exit,'
 Regularization was relatively light in these models; a ridge parameter of around .002 maximized accuracy.
 
 \section{Evaluating, and further improving, results.}
+\label{sec:eval}
 
 As indicated in Figure \ref{badconfusion}, volume-level metadata had originally been so spotty that recall for nineteenth-century fiction, poetry, and drama would be less than 40\% if you relied on it. It's not at all hard for algorithmic methods to improve on that level of recall! The confusion matrices in figures \ref{confusion1} and \ref{confusion2} show that page-level classification raised recall to 86-96\% while keeping precision reasonably high (it ranged from 90\% for poetry to 94-96\% for drama and fiction).
 
@@ -481,7 +484,7 @@ We trained these models of confidence on our full collection of training data (4
 \begin{figure}[!h]
 \centering
 \includegraphics[width=\textwidth]{images/ficprecall}
-\caption{Precision-recall graph for fiction datasets limited to various thresholds of confidence.}
+\caption{Precision-recall graph for fiction datasets limited to various thresholds of confidence. Graphics from ggplot2~\cite{ggplot}.}
 \label{ficprecall}
 \end{figure}
 
@@ -525,7 +528,7 @@ We believe these filtered datasets represent a new and valuable resource for dis
 
 For good or ill, these datasets are also significantly different from the kinds of collections researchers tend to construct from bibliographies or acquire from vendors. Those datasets are often keyed to date of composition or first publication, and contain only one record for each work. HathiTrust, by contrast, is an aggregation of university libraries; popular works are often represented by multiple editions and reprintings scattered across time. That could be an advantage or a disadvantage, depending on your research goal.
 
-No single collection of works is universally representative, because there are a range of different things a literary historian might want to represent. What were authors writing in 1871? What were people in a given class (or gender, or race) reading in 1871? What was getting reviewed? What was getting bought by libraries? These are all valid questions. In its raw form, HathiTrust probably comes closest to answering the last of them. But HathiTrust is also a very large collection, which means that researchers have a lot of scope to select subsets and rebalance the collection as they see fit. In many cases, scholars may want to work with multiple collections from different sources, contrasting and comparing them in order to see whether a particular pattern visible in one corpus also holds true in corpora selected differently. A sampling of volumes in university libraries might be one of those sources, but it's not likely to be the only one.
+No single collection of works is universally representative, because there are a range of different things a literary historian might want to represent. What were authors writing in 1871? What were people in a given class (or gender, or race) reading in 1871? What was getting reviewed? What was getting bought by libraries? These are all valid questions. In its raw form, HathiTrust probably comes closest to answering the last of them. But HathiTrust is also a very large collection, which means that researchers have a lot of scope to select subsets and rebalance the collection as they see fit. In many cases, scholars may want to work with multiple collections from different sources, contrasting and comparing them in order to see whether a particular pattern visible in one corpus also holds true in corpora selected differently.
 
 \subsection{Particular problems.}
 HathiTrust is growing all the time, and it now contains more eighteenth-century volumes than are contained in this (two-year-old) snapshot. But I would be a little wary about relying on these datasets, at any rate, for coverage of the early eighteenth century. There are probably better resources.
@@ -557,11 +560,31 @@ Researchers are frequently advised to record failures and blind alleys as well a
 
 \item \textit{Sophisticated approaches to the multiclass problem.} Most classification algorithms are designed to make a binary prediction; if you want to choose between more than two possible classes, you have to find a way of organizing binary predictors to ``vote'' about a multiple-choice question~\cite{allwein:multiclass}. For instance, you could training one classifier for each class, contrasting it to the examples of all other classes, or train one classifier for each class \textit{boundary} (fiction-against-poetry, fiction-against-front-matter, fiction-against-drama, and so on). The first strategy is sometimes called one-vs-all; the second, all-versus-all. There are also further refinements~\cite{dieterrich:multiclass}. The secondary literature  is rather confusing here; a number of articles acknowledge that one-versus-all is commonly used, but then propose that some other more refined solution is better~\cite{allwein:multiclass}. No doubt that's sometimes true. However, for our use case we found that one-vs-all worked best, and there is some theoretical support for the notion that it's a robust solution~\cite{rifkin:multiclass}.
 
-\item \textit{Active learning. Co-training.}
-
-\item
+\item \textit{A bunch of other stuff specific to this task.} Active learning. Co-training. Using volume-level metadata as priors. Using call numbers. Creating a special category for travel literature. Separating autobiography from biography. Training classifiers for particular centuries. Organizing classifiers in a cascade structure (may have helped a little, but effect was small and not worth the added complexity).
 
 \end{itemize}
+
+\section{Things that still need doing.}
+
+In Spring 2015, we expect that HathiTrust will start to release information about volumes under copyright. As that happens, we will expand our page-level mapping of genres to cover the twentieth century.
+
+HathiTrust has also expanded while this project was in motion; we'll probably need to undertake a second mapping of the period 1700-1922 in order to cover things that have been added. We don't anticipate extending the project back before 1700; EEBO is probably a more appropriate resource in that period.
+
+We will also work to ensure that our metadata is integrated in HathiTrust Research Center so that it can be used as a resource by scholars who are constructing worksets.
+
+Finally, we're happy to advise scholars who are interested in adapting the approaches developed here to do similar mapping in other languages. That raises the additional question...
+
+\subsection{How portable is this code?}
+
+The short answer is, that we definitely have \textit{not} built a portable ``tool'' that could simply be pointed at another collection to accomplish the same kind of mapping.
+
+If we thought that kind of tool could be built, we might propose an Implementation Grant to build it. But actually, we doubt it's practical: we believe this sort of project is necessarily domain-specific.
+
+For instance, a lot of the labor involved goes into tagging and organizing training data. That's a manual task, and a domain-specific one; you can't export training data very meaningfully across boundaries of period and language. Moreover, it's likely that other aspects of the classification workflow are a bit domain-specific as well. For instance, as we move into the twentieth century, we'll probably adopt a different feature set. We might even consider creating a new set of categories (training a classifier for ``travel writing'' didn't help in the nineteenth century, but maybe it would in the twentieth?)
+
+On the other hand, we do hope that the code in the project's Github repository will provide at least a useful template for other scholars contemplating the same kind of undertaking. And we will continue to work to make the template more portable. Right now one of the main obstacles is that our workflow is designed to work with a data format that people are unlikely to have on their hard drives---a few hundred thousand files organized in a ``pairtree'' folder structure---and specifically with transformations of those files that we undertook at an earlier stage of the project in order to correct OCR. But as HathiTrust Research Center standardizes a format for exporting page-level feature counts, it may increasingly be possible to assume a standard data representation. Our twentieth-century workflow will have to work with those exported features, and it should be a bit more portable than the current version of the code.
+
+Still, at best, automated page-level genre mapping is going to be a machine-learning project. Training data will have to be generated by hand, regression parameters will have to be tuned. Probably after classification is complete there will be some kind of filtering step analogous to the filtering we describe in Section \ref{sec:eval}. The really portable parts of the \textit{code} are the machine-learning algorithms in Weka and scikit-learn~\cite{scikit-learn, weka}. The portable part of this project is probably not embodied in code, for the most part, but in our experience of approaches that turned out to be useful, or not to work. That's why we've made this report so verbose.
 
 \newpage
 \bibliographystyle{plain}
