@@ -529,7 +529,7 @@ Predicted precision and recall are based on a model that was assessing numbers o
 \newpage
 \subsection{Data format.}
 
-Files were saved as JSON objects in utf-8 encoding, and aggregated in .tar.gz files. Sample Python scripts for extracting jsons from the tarfiles are located in the project repository under /munging~\cite{underwood:genrerepo}.
+Files were saved as JSON objects in utf-8 encoding, and aggregated in .tar.gz files. Python scripts for extracting jsons from the tarfiles and aligning predictions with pages are located in the project repository under /utilities~\cite{underwood:genrerepo}.
 
 \vspace{2mm}
 \noindent All files will contain the following top-level keys:
@@ -549,7 +549,7 @@ Files were saved as JSON objects in utf-8 encoding, and aggregated in .tar.gz fi
 \noindent \textbf{hathi\_metadata:} This is not meant to substitute for the full metadata available through HathiTrust; it's mainly a pointer to allow you to retrieve that metadata, plus a few fields to give you a sense of what you're looking at. It always contains keys for \textit{author, genre\_tags, htid, inferred\_date} and \textit{title.} The \textit{htid} is the HathiTrust volume ID. Inferred date will be the earliest of several dates that may be provided for the item in the MARC record. \textit{Genre\_tags} here are extracted from the HathiTrust MARC record, not produced by our mapping, and users are advised to take them with a grain of salt.
 
 \vspace{2mm}
-\noindent \textbf{page\_genres:} An object containing numbers for all pages from 0 to totalpages-1, pointing to the most probable genre for each page. Numbers will always be sequential, and their sequence maps onto the sequence of individually-numbered page files in HathiTrust (although the numbers in the two sequences are not guaranteed to be the same, because HathiTrust filenames can on rare occasions skip numbers). Note that none of these numbers map onto the page numbers printed on the original text. Also, volumes in certain HathiTrust namespaces (notably mdp and miua) can include files that are summary data rather than numbered page files; these should not be included in the sequence.
+\noindent \textbf{page\_genres:} An object containing numbers for all pages from 0 to totalpages-1, pointing to the most probable genre for each page. Numbers will always be sequential, and their sequence maps onto the sequence of individually-numbered page files in HathiTrust (although the numbers in the two sequences are not guaranteed to be the same, because HathiTrust filenames can on rare occasions skip numbers). Note that none of these numbers map onto the page numbers printed on the original text. The \textbf{pagealigner} module in our repo under /utilities may simplify some of these tasks if you use Python.
 
 \begin{wrapfigure}[26]{r}{0.5\textwidth}
   \begin{centering}
@@ -567,6 +567,28 @@ This volume demonstrates some of the advantages of page-level genre classificati
 
 \FloatBarrier
 
+\subsection{Metadata format.}
+For full metadata records associated with volumes, we refer researchers to the range of HathiTrust bibliographic services (\url{http://www.hathitrust.org/data}). The .csv files we have provided (ficmeta.csv, and so on) are not intended as a substitute; a lot of information has been abbreviated or left out. They're provided purely for the convenience of researchers who may want to get a quick overview of what's included in the collection covered by our metadata before deciding whether to invest more time in it.
+
+Brief explanations of the columns in the metadata files:
+
+\noindent \textbf{htid:} HathiTrust volume ID. This is an item-level identifier for volumes. IDs used for pairtree storage can come in two different forms; we have provided the ``clean'' versions of the IDs that are legal as filenames~\cite{pairtree}.
+
+\noindent \textbf{recordid:} This is the HathiTrust record ID; in multivolume works, it may be the same for all volumes.
+
+\noindent \textbf{oclc:} OCLC number, when available.
+
+\noindent \textbf{locnum:} Library of Congress call number, when available.
+
+\noindent \textbf{datetype, startdate, enddate, imprintdate:} The first three of these fields are extracted from MARC controlfield 008 (\url{http://www.loc.gov/marc/archive/2000/concise/ecbd008s.html}). The last is extracted from other text fields in MARC.
+
+\noindent \textbf{place:} Place of publication code, as documented in MARC controlfield 008.
+
+\noindent \textbf{enumcron:} A field that distinguishes multiple volumes of a single record.
+
+\noindent \textbf{prob80precise:} In genre-specific datasets, this column indicates the probability that more than 80\% of the pages assigned to the genre in this volume are correctly so assigned.
+
+\noindent \textbf{genrepages, totalpages:} In genre-specific datasets, the number of pages in the relevant genre, and the total number of pages in the volume.
 
 \subsection{Strengths and weaknesses of coverage.}
 
@@ -612,27 +634,27 @@ Researchers are frequently advised to record failures and blind alleys as well a
 
 \subsection{Things that still need doing.}
 
-In Spring 2015, we expect that HathiTrust will start to release information about volumes under copyright. As that happens, we will expand our page-level mapping of genres to cover the twentieth century. We've coordinated closely with HTRC to ensure this will be possible.
+This is only an interim progress report for the project; work is still underway. In Spring 2015, we expect that HathiTrust will start to release information about volumes under copyright. As that happens, we will expand our page-level mapping of genres to cover the twentieth century. We've coordinated closely with HathiTrust Research Center to ensure this will be possible.
 
-HathiTrust has also expanded while this project was in motion; we'll probably need to undertake a second mapping of the period 1700-1922 in order to cover things that have been added. At that point, we might try some ideas for improving the project that we haven't had time to implement on the first pass. 
+HathiTrust has also expanded while this project was in motion; we'll probably need to undertake a second mapping of the period 1700-1922 in order to cover things that have been added. At that point, we might try some ideas for improving the project that we haven't had time to implement on the first pass. We will also work to ensure that our metadata is integrated in HathiTrust Research Center so that it can be used as a resource by scholars constructing worksets.
 
 We don't anticipate extending the project back before 1700; EEBO is probably a more appropriate resource in that period.
 
-We will also work to ensure that our metadata is integrated in HathiTrust Research Center so that it can be used as a resource by scholars who are constructing worksets.
+Since many scholars will be less interested in the broad, macroscopic collections developed here than in specific subgenres (``tragedy,'' ``detective fiction''), we anticipate documenting a use case of that kind in the project repository. We understand these problems as folksonomic, so our goal will be to demonstrate methods, not to produce an authoritative map.
 
 Finally, we're happy to advise scholars who are interested in adapting the approaches developed here to do similar mapping in other languages. That raises the additional question...
 
 \subsection{How portable is this code?}
 
-We've made our code public, but it definitely is not a portable tool that could simply be pointed at volumes from other libraries, languages, or periods. We've tried to fully document our methods, so they can be adapted to other problems. But the process of mapping genres really involves too many domain-specific aspects to be envisioned as a ``tool.''
+We've made our code public, and believe parts of it may be portable, but as a whole it definitely is not a tool that could simply be pointed at collections from other libraries, languages, or periods to map them. Our methods can be \textit{adapted} to other problems. But the process of mapping genres involves too many domain-specific aspects to be packaged as a ``tool.''
 
-For instance, a lot of the labor involved goes into tagging and organizing training data. That's a manual task, and a domain-specific one: you can't export training data very meaningfully across languages or periods. It would be a bit risky even to apply a model trained on one set of data to data that had undergone a different sort of OCR correction. Moreover, it's likely that the optimal set of features will vary from one period to another; regularization parameters will need to be tuned; decisions about the precision-recall tradeoff will require human judgment.
+For instance, a lot of the labor involved goes into tagging and organizing training data. That's a manual task, and a domain-specific one: you can't export training data very meaningfully across languages or periods. It would be risky even to apply a model trained on one dataset to data that had undergone a different sort of OCR correction. Moreover, it's likely that the optimal set of features will vary from one period to another; regularization parameters will need to be tuned; decisions about the precision-recall tradeoff will require human judgment.
 
 In short, using machine learning to map genre is at best a months-long project with a lot of domain-specific data munging. If we set out to write code that encapsulated the fully generalizable, portable part of the project ... we would probably end up with something like the library of machine learning algorithms already contained in Weka and scikit-learn~\cite{weka, scikit-learn}. 
 
-On the other hand, we do hope that the code in our Github repository will provide at least a useful template for other scholars contemplating the same kind of undertaking~\cite{underwood:genrerepo}. Some parts of the code (for instance, the GUI we used to browse and tag volumes at the page level) might conceivably be borrowed unchanged by other research projects. Others could be used more loosely as models.
+On the other hand, we do hope that the code in our Github repository will provide at least a useful template for other scholars contemplating the same kind of undertaking~\cite{underwood:genrerepo}. Some parts of the code (for instance, the GUI we used to browse and tag volumes at the page level) might conceivably be borrowed unchanged by other research projects. Others could be used more loosely as models. And the repo includes a small library of Python utilities that might be useful for particular data-munging tasks researchers are likely to encounter: for instance, extracting a sequence of pages from a HathiTrust zip file or extracting tabular metadata from a collection of MARCxml.
 
-The aspects of this project that we would more confidently expect to be portable are the methods we found to work well---and our experience trying a range of other techniques that turned out not to. That's why we've made this report so verbose.
+The aspect of this project that we would more confidently expect to be portable is our general account of what's involved in using machine learning to construct collections for literary research---including methods that work well, and blind alleys that don't. That's why we've made this report so verbose.
 
 \newpage
 \bibliographystyle{plain}
