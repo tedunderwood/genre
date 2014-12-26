@@ -103,21 +103,23 @@ One of the main problems confronting distant reading is the scarcity of metadata
 
 Our goal in this project was to show how literary scholars can use machine learning to select genre-specific collections from digital libraries. We've started by separating five broad categories that interest literary scholars: prose fiction, poetry (narrative and lyric), drama (including verse drama), prose nonfiction, and various forms of paratext. While we have made our code public and published articles describing our methods~\cite{underwood:mutable, underwood:blurry, underwood:slate, underwood:genrerepo}, the deliverables that may most immediately interest other researchers are
 \begin{itemize}
-\item \textbf{Page-level maps of genre in 854,464 volumes from HathiTrust Digital Library (English-language monographs between 1700 and 1922, inclusive).} From this large resource, we have specifically extracted collections of prose fiction, drama, and poetry, where each collection has greater than 97\% precision (fewer than 3\% of the pages they contain are drawn from other genres).
+\item \textbf{Page-level maps of genre in 854,476 volumes from HathiTrust Digital Library (English-language monographs between 1700 and 1922, inclusive)}~\cite{underwood:pages}. From this large resource, we have specifically extracted collections of prose fiction, drama, and poetry, where each collection has greater than 97\% precision (fewer than 3\% of the pages they contain are drawn from other genres).
 \end{itemize}
 
 The genre metadata we have created are available through HathiTrust Research Center. Just as importantly, we have consulted with HTRC to help shape their strategy for the nonconsumptive extraction of features from works under copyright. Since the features they're planning to extract will support our classification workflow, it will be possible to map genres inside works behind the veil of copyright. This may be the place where we need automated mapping most urgently; distant readers would otherwise be flying blind in the twentieth century.
 
 Mapping a broad category like ``prose fiction'' is of course only a starting point for distant reading. The methods we describe here can also be used to select collections as specific as ``detective fiction'' or ``verse tragedy.'' However, as we descend from broad categories to subgenres, critical consensus about the list of categories to be mapped becomes less stable. Moreover, while poetry and prose fiction need to be treated for the most part as exclusive sets, the subgenres within them don't particularly need to be exclusive (e.g. nothing prevents a gothic novel from also being science fiction). This actually simplifies the problem of classification, since categories that are free to overlap can be studied independently. In other words, as we move down the spectrum of sizes, the problem named by ``genre'' ceases to be a taxonomic question and becomes a largely folksonomic one that does not require a single map or a central controlled vocabulary~\cite{vanderwal:folksonomy}.
 
-\section{Project staff.}
-Ted Underwood was PI on this project; he is the author of this report, and he wrote most of the code used for genre classification, drawing on machine learning libraries in Python (scikit-learn) and Java (Weka)~\cite{scikit-learn, weka}. His time on this project was additionally supported by an ACLS Digital Innovation Fellowship.
+\section{Project staff; other acknowledgments.}
+Ted Underwood was PI on this project; he is the author of this report, and he wrote most of the code used for genre classification, drawing on machine learning libraries in Python (scikit-learn) and Java (Weka)~\cite{scikit-learn, weka}.
 
-Boris Capitanu is a Research Programmer at the NCSA; he worked with HTRC to design their feature-extraction workflow, and developed web tools for this project as well as a page-level tagger we used to create training data.
+Boris Capitanu is a Senior Research Programmer at the NCSA; he worked with HTRC to design their feature-extraction workflow, and developed web tools for this project as well as a page-level tagger we used to create training data.
 
 Michael L. Black worked on the project first as a graduate research assistant, and then as Associate Director of I-CHASS. He designed the original prototype of the tagger used to create page-level training data, the original version of a Python script we used to extract tabular data from MARC records, and significant parts of other workflows. Shawn Ballard worked on the project as a graduate research assistant, supervising the creation of training data.
 
 Jonathan Cheng, Nicole Moore, Clara Mount, and Lea Potter worked on the project as undergraduate research assistants, playing a vital role especially in the collection of training data.
+
+This is an interim progress report for the National Endowment for the Humanities, which supported the project with a Digital Humanities Start-Up Grant. The PI's time on this project was additionally supported by an ACLS Digital Innovation Fellowship, which was absolutely vital to its success. The project also depended on collaboration and conversation with a wide range of people at HathiTrust Digital Library, HathiTrust Research Center, and the University of Illinois Library, including but not limited to Loretta Auvil, Timothy Cole, Stephen Downie, Colleen Fallaw, Harriett Green, Myung-Ja Han, Jacob Jett, and Jeremy York. Jana Diesner and David Bamman offered useful advice about machine learning.
 
 \newpage
 \section{Distant reading and the problem of genre.}
@@ -148,17 +150,17 @@ Even if genre was reported reliably at the volume level, it might not be enough 
 
 \newpage
 \subsection{Goals of this project.}
-This project proposed to show scholars how to map genre algorithmically in large digital libraries, and to actually generate a page-level map of a million English-language volumes from 1700 to 1949. So far, we have achieved the goal for 854,464 non-serial volumes from 1700 to 1923. But we still plan to extend the map to 1949, and will do so as soon as HathiTrust Digital Library releases information about word counts in volumes beyond 1923; that release is currently delayed while a final layer of concerns about security and intellectual property law are addressed, but we expect it to take place in Spring 2015.
+This project proposed to show scholars how to map genre algorithmically in large digital libraries, and to actually generate a page-level map of a million English-language volumes from 1700 to 1949. So far, we have achieved the goal for 854,476 non-serial volumes from 1700 to 1923. But we still plan to extend the map to 1949, and will do so as soon as HathiTrust Digital Library releases information about word counts in volumes beyond 1923; that release is currently delayed while a final layer of concerns about security and intellectual property law are addressed, but we expect it to take place in Spring 2015.
 
 \subsection{Deliverables.}
-Work on this grant has had a number of important consequences, including publications~\cite{underwood:mutable, underwood:blurry, underwood:slate}, and code that is freely available on the web~\cite{underwood:genrerepo}. But the deliverable of most interest to literary scholars will probably be the sets of page-level metadata we have produced. In particular, we have defined \textbf{collections of poetry, fiction, and drama, 1700-1923, that are more than 97\% precise} (that is, fewer than 3\% of the pages in the collection will come from some other genre). Maximizing recall is more challenging, but we can certainly improve the current situation (recall of 30-40\%). Depending on the genre, we can get recall of 70-95\% while retaining very high precision; scholars who are willing to accept reduced precision can get recall above 87\% for all genres.
+Work on this grant has had a number of consequences, including publications~\cite{underwood:mutable, underwood:blurry, underwood:slate}, and code that is freely available on the web~\cite{underwood:genrerepo}. But the deliverable of most interest to literary scholars will probably be the sets of page-level metadata we have produced~\cite{underwood:pages}. In particular, we have defined \textbf{collections of poetry, fiction, and drama, 1700-1923, that are more than 97\% precise} (that is, fewer than 3\% of the pages in the collection will come from some other genre). Maximizing recall is more challenging, but we can certainly improve the current situation (recall of 30-40\%). Depending on the genre, we can get recall of 70-95\% while retaining very high precision; scholars who are willing to accept reduced precision can get recall above 87\% for all genres.
 
 \subsection{What is genre, and can it be mapped at all?}
 Centuries of literary scholarship have failed to produce human consensus about genre. So scholars are likely to view the notion that genre can be mapped by computers very skeptically indeed.
 
 If an algorithmic approach to this problem required us first to stabilize an ontology of genre, skepticism would be warranted. Critics don't have an exhaustive list of genres. In fact, we don't have much reason to assume that there is a single coherent phenomenon corresponding to our word ``genre'' at all. The persistent debate surrounding the term suggests that it may have been stretched to cover a range of different things~\cite{santini:genre}. ``Genre'' can be applied to categories that have visible formal characteristics (a lyric poem or an index). But it's also applied to things that are closer to modes, cutting across formal boundaries (tragedy, romance, and the gothic, for instance, are narrative patterns that recur in different media). ``Genre'' sometimes describes patterns that persist tacitly for a couple of decades (silver-fork fiction), and sometimes describes institutions that persist for centuries, explicitly organizing bookstores as well as the conscious intentions of authors (science fiction, the novel).
 
-In the 1970s and 1980s, linguists and structuralist critics sought to resolve these problems by giving literary categories a firmer grounding in a deep taxonomy of text types (e.g., narrative / description) ~\cite{genette:genre, biber:typology}. But the project encountered a range of internal contradictions~\cite{derrida:genre}, and the prevailing emphasis in contemporary genre theory is nominalistic. Scholars tend to treat genre simply as a social phenomenon. In the discipline of rhetoric, the emphasis falls on recurring patterns of rhetorical practice; in sociology, it tends to fall more on reception, and on the social differentiations mediated by categorization of art~\cite{devitt:genre, dimaggio:classification}.
+In the 1970s and 1980s, linguists and structuralist critics sought to resolve these problems by giving literary categories a firmer grounding in a deep taxonomy of modes or text types (e.g., narrative / description) ~\cite{genette:genre, biber:typology}. But the project encountered a range of internal contradictions~\cite{derrida:genre}, and the prevailing emphasis in contemporary genre theory is nominalistic. Scholars tend to treat genre simply as a social phenomenon. In the discipline of rhetoric, the emphasis falls on recurring patterns of rhetorical practice; in sociology, it tends to fall more on reception, and on the social differentiations mediated by categorization of art~\cite{devitt:genre, dimaggio:classification}.
 
 Our project has similarly approached genre as an empirical social problem. Moreover, since ``genre'' may cover a range of social phenomena, with different degrees of blurriness or stability, we've adopted different strategies for different aspects of the problem. About certain broad categories people have, in practice, achieved a great deal of consensus. When we organized a group of five readers to characterize pages by genre, we were able to agree 94.5\% of the time about the divisions between, for instance, prose and poetry, fiction and nonfiction, body text and paratext. Even these categories are social phenomena with fuzzy boundaries: the 5.5\% of cases where we disagreed were not simply errors. But there was in practice a broad central area of agreement.
 
@@ -208,7 +210,7 @@ Moreover, there was a weak but significant correlation between the pages where h
 
 The trade-off between precision and recall gives us a way to think about these definitional choices in the context of predictive modeling~\cite{buckland:recall}. A strict definition of a genre maximizes precision (how many of the pages we assigned to genre X were actually in that genre?) A loose definition maximizes recall (how many of the pages that might belong to the genre did we catch?) To some extent these choices are made through the selection of training examples, but there are also ways to let end users tune the model, trading recall against precision to suit their own definitional preferences. In the final datasets produced by this project, we associate a confidence score with each volume so users can set their own precision threshold. This makes it possible to create narrowly-defined collections where 97-98\% of the pages are drama or poetry, even though the overall accuracy of our model was 93.5\%.
 
-Statistical modeling tends to be less accurate when applied to subgenres like ``epistolary fiction'' or ``detective fiction.'' (We trained a model of epistolary fiction, for instance, it was only 85\% accurate.) But then, human consensus about those categories also tends to be much shakier.
+Statistical modeling tends to be less accurate when applied to subgenres like ``epistolary fiction'' or ``detective fiction.'' (We trained a model of epistolary fiction, for instance; it was only 85\% accurate.) But then, human consensus about those categories also tends to be much shakier.
 
 \section{Methods.}
 
@@ -225,7 +227,7 @@ We had originally planned to train different models for each century, and transi
 
 Our final concern was to give users a way of adjusting genre definitions to be more or less inclusive by tuning the tradeoff between precision and recall. In principle, we could have done that at the page level, but it seemed more likely that users would want to select texts as volumes, and we also had more predictive leverage at the volume level. We therefore created a new set of models to define volume-level confidence metrics. Since our original page-level models were probabilistic, we could have estimated confidence simply by looking at the original model's degree of certainty about each page, and we did use those degrees of confidence as one piece of evidence. But in practice, it turned out to be more important to consider other kinds of evidence at the volume level. For instance, volumes where our predictions hopped back and forth frequently between genres were often unreliable.
 
-We recorded degrees of confidence for all 854,464 volumes we mapped. A researcher can define their own corpus of fiction, poetry, or drama by setting whatever confidence threshold they desire, and pulling out the volumes that meet that threshold. But we also created special pre-packaged ``filtered'' collections for these three genres by identifying confidence thresholds for each genre that increased precision for relatively little loss of recall. These filtered collections are available as separate tar.gz files.
+We recorded degrees of confidence for all 854,476 volumes we mapped. A researcher can define their own corpus of fiction, poetry, or drama by setting whatever confidence threshold they desire, and pulling out the volumes that meet that threshold. But we also created special pre-packaged ``filtered'' collections for these three genres by identifying confidence thresholds for each genre that increased precision for relatively little loss of recall. These filtered collections are available as separate tar.gz files.
 
 \subsection{Selection of training data.}
 
@@ -264,7 +266,7 @@ Because we knew that decisions about lumping and splitting would be contingent o
 
 The boldfaced terms below in the ``broad'' column are the ones for which we trained classifiers in the present phase of research. All of the categories that follow a broad category are lumped in with it for training purposes. But all those categories are preserved in training data; we might attempt to add finer divisions at a later date.
 
-\begin{center}
+\begin{centering}
 \begin{longtable}{ | l | l | p{10cm} |}
 \hline
 broad & specific & description \\ \hline \hline
@@ -272,7 +274,7 @@ broad & specific & description \\ \hline \hline
  & trv & Nonfiction about travel. \\ \hline
  & ora	& Orations and sermons (that seem to have been actually delivered orally). \\ \hline
  & let & Personal letters (actually written as correspondence.) \\ \hline
-& pref & Nonfiction located between front matter and body text. Preface, dedication, introduction. \\ \hline
+& pref & Nonfiction located before body text, especially before ToC. Preface, dedication, introduction. \\ \hline
 & argum & Prose argument preceding a poem. \\ \hline
 & notes & Prose notes that follow a poem or drama. \\ \hline
 & errat & Errata slip.  \\ \hline
@@ -300,9 +302,9 @@ broad & specific & description \\ \hline \hline
 \textbf{ads} & ads & A publisher's catalog of titles, or other ads.  \\ \hline
 & bibli & Bibliography.  \\ \hline
 \end{longtable}
-\end{center}
+\end{centering}
 
-There are a number of things that will seem strange about this list, but probably the strangest is the way categories of paratext are grouped into ``front matter,'' ``back matter,'' and ``ads.'' One could persuasively object that these are structural or formal categories, not genres. And ``indexes'' are not always located in the back of a book! But in practice accuracy was higher when we lumped indexes with back matter, and our primary concern with paratext in this project was to separate it reliably from body text.
+There are a number of things that will seem strange about this list, but probably the strangest is the way categories of paratext are grouped into ``front matter,'' ``back matter,'' and ``ads.'' One could persuasively object that these are structural or formal categories, not genres. And ``indexes'' are not always located in the back of a book! But in practice accuracy was higher when we lumped indexes with back matter, and predictive accuracy was our primary reason for caring about paratext.
 
 Another, perhaps more importantly debatable boundary is the one that separates ``poetry'' from ``drama.'' Verse drama is also dramatic poetry, so one could have chosen to treat drama and poetry as overlapping categories. (Some, but not all, pages of drama would also be examples of poetry.) There's no technical obstacle to doing this: multilabel classification, where examples can belong to more than one class at once, is a well-established subfield of machine learning~\cite{tsoumakas:multilabel}. The problem is literary: in practice, a lot of verse drama drops into prose from time to time. So a division between verse and prose drama would run right through the middle of many pages. And it's not immediately clear what we would accomplish by making that division: in practice, scholars are more likely to organize corpora around the generic concepts of ``poetry'' and ``drama'' than around the largely-formal concept of ``verse.'' Moreover, it would be fairly easy to separate verse from prose later, if one needed to do that for some reason.
 
@@ -449,9 +451,7 @@ It may also be worth comparing these results to the initial results we reported 
 
 \subsection{Especially predictive features.}
 
-One advantage of regularized logistic regression is that it's extremely interpretable; sample model coefficients have been saved in the project repo under the /models folder.
-
-A model with 1062 features depends on a lot of different factors, and it's somewhat misleading to extract a few that happen to be at the top or bottom of a list. Sometimes a single feature becomes important in effect as a counterweight against lots of others. But it may be interesting to note features that were unexpectedly important in particular genres.
+One advantage of regularized logistic regression is that it's relatively interpretable. A model with 1062 features depends on a lot of different factors, and it's somewhat misleading to extract a few that happen to be at the top or bottom of a list. Sometimes a single feature becomes important in effect as a counterweight against lots of others. But it may be interesting to note features that were unexpectedly important in particular genres.
 
 The features most strongly predictive of fiction were structural features (typeTokenSqrd, typeToken, totalWords, lineLengthRatio). Also ``the,'' ``my,'' ``you,'' ``said,'' and ``her.'' The features that argued most strongly against fiction were Arabic numbers.
 
@@ -509,7 +509,7 @@ In the case of poetry, the situation isn't quite as pretty, because the elbow is
 
 To make it easier for researchers to profit from volume-level filtering, we have created pre-packaged datasets of poetry, drama, and fiction, using relatively high confidence thresholds. Looking at these datasets, we also realized that manual filtering could improve things a bit further. It would be impossible to manually tag genres in 276 million pages, but once you have a pretty-good list of 100,000 fiction volumes, it's actually not hard to find a few hundred obvious ringers. One of the strategies we used was to sort the volumes by size and scan the titles of the largest volumes. This was effective both because oddly large volumes tended to be things like encyclopedias, dictionaries, Congressional reports, etc. that didn't belong in the list, and because it meant we were likely to catch \textit{big} errors---a relatively effective use of our limited time and energy.
 
-Since predictions about precision based on a training set of 414 volumes are not necessarily to be trusted very far in a collection of 854,000 volumes, we also confirmed precision by randomly sampling 300 pages from each filtered dataset. We stratified each sample to get 100 pages from each century, because we also wanted to ensure that precision wouldn't vary dramatically across time (10\% noise that varies across time can, actually, be worse than 15\% that doesn't). In Table \ref{filteredtable}, we report predicted precision, predicted recall, and observed precision ranges across all centuries of the dataset.
+Since predictions about precision based on a training set of 414 volumes are not necessarily to be trusted very far in a collection of 854,476 volumes, we also confirmed precision by randomly sampling 300 pages from each filtered dataset. We stratified each sample to get 100 pages from each century, because we also wanted to ensure that precision wouldn't vary dramatically across time (10\% noise that varies across time can, actually, be worse than 15\% that doesn't). In Table \ref{filteredtable}, we report predicted precision, predicted recall, and observed precision ranges across all centuries of the dataset.
 
 \vspace{5mm}
 \begin{table}[h]
@@ -549,7 +549,7 @@ Files were saved as JSON objects in utf-8 encoding, and aggregated in .tar.gz fi
 \noindent \textbf{hathi\_metadata:} This is not meant to substitute for the full metadata available through HathiTrust; it's mainly a pointer to allow you to retrieve that metadata, plus a few fields to give you a sense of what you're looking at. It always contains keys for \textit{author, genre\_tags, htid, inferred\_date} and \textit{title.} The \textit{htid} is the HathiTrust volume ID. Inferred date will be the earliest of several dates that may be provided for the item in the MARC record. \textit{Genre\_tags} here are extracted from the HathiTrust MARC record, not produced by our mapping, and users are advised to take them with a grain of salt.
 
 \vspace{2mm}
-\noindent \textbf{page\_genres:} An object containing numbers for all pages from 0 to totalpages-1, pointing to the most probable genre for each page. Numbers will always be sequential, and their sequence maps onto the sequence of individually-numbered page files in HathiTrust (although the numbers in the two sequences are not guaranteed to be the same, because HathiTrust filenames can on rare occasions skip numbers). Note that none of these numbers map onto the page numbers printed on the original text. The \textbf{pagealigner} module in our repo under /utilities may simplify some of these tasks if you use Python.
+\noindent \textbf{page\_genres:} Contains numbers for all pages from 0 to totalpages-1, pointing to the most probable genre for each page. Numbers will always be sequential, and their sequence maps onto the sequence of individually-numbered page files in HathiTrust (although the numbers in the two sequences are not guaranteed to be the same, because HathiTrust filenames can on rare occasions skip numbers). Note that none of these numbers map onto the page numbers printed on the original text. The \textbf{pagealigner} module in our repo under /utilities may simplify some of these tasks if you use Python.
 
 \begin{wrapfigure}[26]{r}{0.5\textwidth}
   \begin{centering}
@@ -636,7 +636,7 @@ Researchers are frequently advised to record failures and blind alleys as well a
 
 This is only an interim progress report for the project; work is still underway. In Spring 2015, we expect that HathiTrust will start to release information about volumes under copyright. As that happens, we will expand our page-level mapping of genres to cover the twentieth century. We've coordinated closely with HathiTrust Research Center to ensure this will be possible.
 
-HathiTrust has also expanded while this project was in motion; we'll probably need to undertake a second mapping of the period 1700-1922 in order to cover things that have been added. At that point, we might try some ideas for improving the project that we haven't had time to implement on the first pass. We will also work to ensure that our metadata is integrated in HathiTrust Research Center so that it can be used as a resource by scholars constructing worksets.
+HathiTrust has also expanded by almost a third while this project was in motion; we'll probably need to undertake a second mapping of the period 1700--1922 in order to cover things that have been added. At that point, we might try some ideas for improving the project that we haven't had time to implement on the first pass. We will also work to ensure that our metadata is integrated in HathiTrust Research Center so that it can be used as a resource by scholars constructing worksets.
 
 We don't anticipate extending the project back before 1700; EEBO is probably a more appropriate resource in that period.
 
