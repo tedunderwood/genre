@@ -5,7 +5,7 @@ Java code that does classification at the page level, while preserving the organ
 
 I've used this code to find the fiction, nonfiction, poetry, and drama in 854,000 HathiTrust volumes, while separating those body text genres from genres of paratext (front matter, back matter, publisher's advertisements). However, the workflow for that task is complex; this is not a general-purpose "tool" that could simply be pointed at another collection in order to accomplish the same thing. For instance, the models of genre produced by this code depend on training data; we had to manually tag the pages of 414 volumes with genre information. Training data is inevitably collection-specific.
 
-Instead of viewing this as a tool, it's probably more realistic to view it as a set of useful models for people who are interested in accomplishing something similar.
+Instead of viewing this as a tool, it's probably more realistic to view it as a set of useful models for people who are interested in accomplishing something similar. Weka 3.7.11 is a dependency.
 
 Fuller documentation is contained in the project report (link TBA).
 
@@ -22,6 +22,10 @@ The package works by training regularized logistic classifiers whose predictions
 4. Parsing command-line arguments to specify source and output directories, request crossvalidation, set parameters, etc.
 
 5. Can be applied to volumes stored in the pairtree structure used, for instance, by HathiTrust.
+
+doc
+---
+This subfolder contains javadocs for the pages package. Not browsable from within the repo, but once cloned, clicking index.html on your local machine should work.
 
 class descriptions
 ------------------
