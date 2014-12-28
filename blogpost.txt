@@ -1,0 +1,42 @@
+Finding the fiction, poetry, and drama in HathiTrust
+
+Public conversation about distant reading has probably made it sound like the challenging part of this project involves new methods of analysis. But behind the scenes, a lot of people will admit that the most time-consuming (and perhaps even the hardest) part of studying literary history at scale is simply locating texts to read in the first place. 
+
+It's true that we have large digital libraries now. But locating "the English-language fiction" (or "poetry") in a library is not as simple as it sounds. Older books don't necessarily have genre information attached. (In HathiTrust, less than 40% of the fiction published before 1923 is tagged appropriately). And volume-level information wouldn't, in any case, be enough to guide machine reading, because genres are mixed up inside volumes. 
+
+An article about money and the novel that recently appeared in Slate makes a good illustration of the potential pitfalls that can arise here. The article (written by Hoyt Long, Richard So, and myself) argues that references to specific amounts of money become more frequent in fiction from 1825 to 1950. But if you trust Google's "English Fiction" collection, it looks like we missed the big story. The frequency of dollar signs skyrockets in the late nineteenth century, and then plummets in the early twentieth.
+
+On the other hand, so do several other words or symbols that tend to appear in advertisements for books.
+
+So it seems likely that what we're observing here is something that happens in volumes of fiction, but not exactly in the genre of fiction itself -- the rise and fall of the lists of books for sale that late-nineteenth-century publishers tend to insert at the backs of their volumes. Individually, those two- or three-page catalogs might not look like significant noise, but because they all rely on a similar vocabulary, and are distributed unevenly across the timeline, they add up to a pretty massive distortion for anyone interested, say, in references to money.
+
+I don't say this to criticize the team behind the Ngram Viewer -- which is, I think, the most successful public humanities project of the past ten years. I'm just pointing out that big, genre-specific collections are really hard to organize, because genres aren't actually well-sorted at the volume level. (In fact, fiction might be the easiest case: drama and poetry often appear in collected volumes of poems and plays, with a prose introduction.)
+
+You can solve this problem by selecting works manually, or by borrowing proprietary collections from a vendor. Both solutions are practical, but they may not entirely fulfill the bold promises we've been making about plumbing the depths of "the great unread" (cite). Over the past two years, with support from the ACLS and NEH, I've been trying to develop another alternative -- a way of starting with a whole library, and dividing it by genre at the page level, using machine learning.
+
+In researching the Slate article, we relied on an early version of that page-level map, and it helped us avoid conflating advertisements with fiction. I've now polished the map enough that I'm comfortable releasing it, and that is in short the point of this blog post.
+
+The data is available on Figshare, where it has a DOI and is citable as a publication. An interim report is also available; it addresses theoretical questions about genre, as well as questions about methods and data format. And the code we used for the project is available on Github.
+
+For in depth questions, please consult the interim progress report. But here are a few quick FAQs.
+
+"What categories did you try to separate?" 
+
+We identify pages as paratext (front matter, back matter, ads), prose nonfiction, poetry (narrative or lyric), drama (including verse drama), and prose fiction.
+
+"How accurate is this mapping?"
+
+Since genres are social institutions, questions about accuracy are relative to human dissensus. Our pairs of human readers agreed about the five categories just mentioned 94.5% of the time. Our model agreed with their human consensus 93.6% of the time. So this mapping is nearly as accurate as we might expect crowdsourcing to be, while covering 276 million pages. For full details, see the confusion matrices in the report. Also, note that we provide ways of adjusting the tradeoff between recall and precision, depending on whether you're more concerned to avoid including things that don't belong or leaving out those that do. We provide filtered collections of drama, fiction, and poetry for scholars who want to work with datasets that are 97% or 98% precise.
+
+"You just wrote a blog post admitting that even simple generic boundaries like fiction/nonfiction are blurry and contested. So how can we pretend to stabilize a map of genre?"
+
+The short answer is that we can't. I don't expect the genre predictions in this dataset to be more than one resource among many. And we've also designed this dataset to have a certain amount of flexibility. There are confidence metrics associated with predictions about each literary genre, and users can define a corpus more broadly or narrowly by adjusting the confidence thresholds for inclusion.
+
+"What about divisions below the page level?"
+
+With the exception of divisions between running headers and body text, we don't address them. There are certainly a wide range of divisions below the page level that matter, but we didn't feel there was much to be gained by trying to solve all those problems at the same time as page-level mapping. In many cases, they are logically a subsequent step.
+
+
+
+
+
