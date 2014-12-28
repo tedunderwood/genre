@@ -17,11 +17,11 @@ window <- function(money) {
 }
 
 
-rawdata <- read.csv('/Users/tunder/maps/pagesperyr5.csv', header = TRUE)
+rawdata <- read.csv('/Users/tunder/maps/fiction1.csv', header = TRUE)
 framelen = length(rawdata$date)
-normalized <- data.frame(x = rawdata$date, y = c(window(rawdata$poetry/rawdata$totals), window(rawdata$fiction/rawdata$totals),
+normalized <- data.frame(x = rawdata$date, y = c(window(rawdata$poetry/rawdata$totals), window(rawdata$biography/rawdata$totals),
                          window(rawdata$drama/rawdata$totals), window(rawdata$ads/rawdata$totals)),
-                         genre = c(rep('poetry', framelen), rep('fiction', framelen),
+                         genre = c(rep('poetry', framelen), rep('biography', framelen),
                                    rep('drama', framelen), rep('ads', framelen)))
 chromatic <- c("gray20", "mediumpurple", "lightsteelblue", 'cadetblue4')
 theme_set(theme_gray(base_size=14))

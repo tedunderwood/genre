@@ -204,11 +204,11 @@ In some cases, it may even turn out that predictive models provide more explanat
 
 \subsubsection{How well do these models actually perform?}
 
-Computer scientists tend to ask how well predictive models can reproduce human ``ground truth.'' But this notion of ground truth is a fiction: human beings agree 100\% of the time about almost nothing. Algorithms also need to be compared to actual levels of human dissensus. Taking this approach, we've found that statistical models of genre are often only slightly less accurate than human crowdsourcing. I've mentioned that five human readers agreed with each other 94.5\% of the time about broad categories like prose fiction, poetry, drama, nonfiction prose, and paratext. Relying in part on voting, we extracted a consensus human opinion from the reports of individual readers. Our statistical model agreed with the consensus only slightly less often than human readers agreed with each other (it achieved 93.5\% accuracy overall, fivefold cross-validated). So the short answer is that algorithmic models can predict human opinions about genre almost as well as other humans do.
+Computer scientists tend to ask how well predictive models can reproduce human ``ground truth.'' But this notion of ground truth is a fiction: human beings agree 100\% of the time about almost nothing. Algorithms also need to be compared to actual levels of human dissensus. Taking this approach, we've found that statistical models of genre are often only slightly less accurate than human crowdsourcing. I've mentioned that five human readers agreed with each other 94.5\% of the time about broad categories like prose fiction, poetry, drama, nonfiction prose, and paratext. Relying in part on voting, we extracted a consensus human opinion from the reports of individual readers. Our statistical model agreed with the consensus only slightly less often than human readers agreed with each other (it achieved 93.6\% accuracy overall, fivefold cross-validated). So the short answer is that algorithmic models can predict human opinions about genre almost as well as other humans do.
 
 Moreover, there was a weak but significant correlation between the pages where human readers disagreed and the pages where a statistical model failed. So when we talk about algorithmic ``accuracy'' with respect to genre, we're talking partly about simple error and partly about a gray zone where human beings and algorithms are forced to make similar definitional choices. A broad definition of fiction might include travel writing with invented dialogue; a narrow definition might contract the category to novels.
 
-The trade-off between precision and recall gives us a way to think about these definitional choices in the context of predictive modeling~\cite{buckland:recall}. A strict definition of a genre maximizes precision (how many of the pages we assigned to genre X were actually in that genre?) A loose definition maximizes recall (how many of the pages that might belong to the genre did we catch?) To some extent these choices are made through the selection of training examples, but there are also ways to let end users tune the model, trading recall against precision to suit their own definitional preferences. In the final datasets produced by this project, we associate a confidence score with each volume so users can set their own precision threshold. This makes it possible to create narrowly-defined collections where 97-98\% of the pages are drama or poetry, even though the overall accuracy of our model was 93.5\%.
+The trade-off between precision and recall gives us a way to think about these definitional choices in the context of predictive modeling~\cite{buckland:recall}. A strict definition of a genre maximizes precision (how many of the pages we assigned to genre X were actually in that genre?) A loose definition maximizes recall (how many of the pages that might belong to the genre did we catch?) To some extent these choices are made through the selection of training examples, but there are also ways to let end users tune the model, trading recall against precision to suit their own definitional preferences. In the final datasets produced by this project, we associate a confidence score with each volume so users can set their own precision threshold. This makes it possible to create narrowly-defined collections where 97-98\% of the pages are drama or poetry, even though the overall accuracy of our model was 93.6\%.
 
 Statistical modeling tends to be less accurate when applied to subgenres like ``epistolary fiction'' or ``detective fiction.'' (We trained a model of epistolary fiction, for instance; it was only 85\% accurate.) But then, human consensus about those categories also tends to be much shakier.
 
@@ -447,9 +447,7 @@ Overall accuracy declined very slightly in the second model, trained on data fro
 
 Paratext was consistently the hardest problem. Advertisements and indexes can be difficult to distinguish from nonfiction, and title pages may sometimes look like poetry. We can claim to have significantly reduced the amount of paratext mixed into literary genres, but not to have eliminated it altogether.
 
-It may also be worth comparing these results to the initial results we reported in Summer 2013~\cite{underwood:mutable}. At that point, with a training set of 100 volumes, microaveraged F1 was 89.4\%. It took about six months of work to get that up to 93.5\% (averaging both models). We did it partly by quadrupling the amount of training data, and partly by fine-tuning feature selection and feature engineering. I think that was worth doing, but I don't think it would be a good idea to spend a great deal more time optimizing this phase of the process. During the last month of labor, we tried a lot of clever ideas, but progress was in reality fairly stationary.
-
-\subsection{Especially predictive features.}
+It may also be worth comparing these results to the initial results we reported in Summer 2013~\cite{underwood:mutable}. At that point, with a training set of 100 volumes, microaveraged F1 was 89.4\%. It took about six months of work to get that up to 93.6\% (averaging both models). We did it partly by quadrupling the amount of training data, and partly by fine-tuning feature selection and feature engineering. I think that was worth doing, but I don't think it would be a good idea to spend a great deal more time optimizing this phase of the process. During the last month of labor, we tried a lot of clever ideas, but progress was in reality fairly stationary.
 
 One advantage of regularized logistic regression is that it's relatively interpretable. A model with 1062 features depends on a lot of different factors, and it's somewhat misleading to extract a few that happen to be at the top or bottom of a list. Sometimes a single feature becomes important in effect as a counterweight against lots of others. But it may be interesting to note features that were unexpectedly important in particular genres.
 
@@ -461,6 +459,22 @@ Features strongly predictive of drama were stage directions (``enter,'' ``exit,'
 
 Regularization was relatively light in these models; a ridge parameter of around .002 maximized accuracy.
 
+\subsection{Distribution of genres across the timeline.}
+
+\begin{figure}[!h]
+\centering
+\includegraphics[width=\textwidth]{images/pagepercentages}
+\caption{Pages in HathiTrust, five-year moving average.}
+\label{genreproportions}
+\end{figure}
+
+We've counted the pages assigned to each genre in each year. Nonfiction dominates so much that it's better to leave it out to make other changes visible.
+
+This very simple analysis isn't likely to reveal much about literary history that we don't already know, but there is still perhaps some interest in seeing familiar trends visualized. The volatile fluctuations in the eighteenth century are mostly a consequence of small sample sizes, although the deep dip right before 1750 might have something to do with the Licensing Act of 1737, at least where drama is concerned. The nineteenth-century decline of drama, and corresponding rise in prose fiction, is more or less what received literary history would lead us to expect. The late-nineteenth-century increase in pages devoted to ads is less familiar, and affects a smaller number of pages, but it could produce distortion if you were counting, say, dollar signs. (Technically, the category "ads" can also include some pages that are bibliographies, but in practice these are mostly publishers' advertisements.)
+
+Of course, what we're really visualizing here are the digitized portions of library collections. This is not a picture of everything that was printed, and is in fact fairly certain to underrepresent some categories of printing, like unbound pamphlets and popular ``story papers.'' Scholars of book history will also want evidence that comes more directly from publishers.
+
+\newpage
 \subsection{Tuning results to suit the needs of individual users.}
 \label{sec:eval}
 
