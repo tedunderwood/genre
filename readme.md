@@ -17,7 +17,7 @@ After page-level predictions had been produced by the code in /pages, we used th
 
 features
 --------
-Python code that extracted features at a page level.
+Python code that extracted features at a page level. This really needs to be refactored; it's probably the least portable part of the workflow right now.
 
 munging
 -------
