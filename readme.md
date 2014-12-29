@@ -9,7 +9,7 @@ The general workflow here moves from browser -> munging-> features -> pages -> c
 
 browser
 -------
-A GUI we used to create page-level training data. Saves data in ARFF format.
+A GUI we used to create page-level training data. Saves data in ARFF format. Written by Michael L. Black and Boris Capitanu.
 
 confidencefilter
 ----------------
@@ -29,4 +29,8 @@ Contains the Java code actually used for page-level classification.
 
 report
 ------
-Contains the LaTeX files for the final project report.
+Contains the LaTeX files for the interim project report.
+
+utilities
+---------
+Contains Python utilities for extracting tabular metadata from MARCxml, aligning page-level predictions with pages in a HathiTrust zip file, and so on. Note that the pagealigner utility is still under construction; check back in three days.
