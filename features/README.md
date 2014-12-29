@@ -9,7 +9,7 @@ The central module here is **MultiNormalizeOCR.py**. You would think it would be
 
 **MultiNormalizeOCR** uses the multiprocessing module to parallelize the workflow at the volume level. That might not provide much speedup on a desktop machine, since the process may end up being limited by I/O anyway. But we ran this on a cluster with a very fast file management system; I don't fully understand the details of implementation, but I/O seems to be effectively parallel, and you do in practice get a lot of speedup from multiprocessing even when your processes are all performing reads and writes.
 
-*NormalizeOCR.py** is an older version before I parallelized it. But note that it may also differ in other ways; before using this module you would want to run a diff.
+**NormalizeOCR.py** is an older version before I parallelized it. But note that it may also differ in other ways; before using this module you would want to run a diff.
 
 **NormalizeVolume.py** does most of the heavy lifting for a particular volume. When the module is first imported it loads a bunch of rulesets (from /rulesets) that will be used later. The key functions are as_stream and correct_stream. The first converts a list of pages to a stream of tokens, while counting structural features (like the longest sequence of capitalized lines in alphabetical order). The second function takes a stream of tokens and counts words, while converting certain categories of tokens (like arabic numbers) to features that represent a category rather than the literal character sequence '1812.'
 
