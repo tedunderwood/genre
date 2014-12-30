@@ -31,6 +31,6 @@ report
 ------
 Contains the LaTeX files for the interim project report.
 
-utilities
+[utilities](https://github.com/tedunderwood/genre/tree/master/utilities)
 ---------
-Contains Python utilities for extracting tabular metadata from MARCxml, aligning page-level predictions with pages in a HathiTrust zip file, and so on. Note that the pagealigner utility is still under construction; check back in three days.
+Contains Python utilities for extracting tabular metadata from MARCxml, aligning page-level predictions with pages in a HathiTrust zip file, and so on. A very early working version of the pagealigner utility is now up, but let's call it a very early alpha! Better version on the way within a week.

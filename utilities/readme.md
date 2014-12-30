@@ -25,21 +25,21 @@ your main script) called /genrepredictions, and your
 data files are HathiTrust zip files in a subfolder called
 /data, this becomes super simple:
 
-from pagealigner import Alignment
-
-alignedvols = Alignment(listofvolstoget)
-
-for volume in alignedvols:
-
-    for page in volume:
-
-        text = page[0]
-
-        genre = page[1]
-
-        if genre == genreyouwant:
-
-            do stuff with text
+    from pagealigner import Alignment
+    
+    alignedvols = Alignment(listofvolstoget)
+    
+    for volume in alignedvols:
+    
+        for page in volume:
+    
+            text = page[0]
+    
+            genre = page[1]
+    
+            if genre == genreyouwant:
+    
+                do stuff with text
 
 If your genre predictions and data files are in other
 folders, or if your data is in a different format, you'll
