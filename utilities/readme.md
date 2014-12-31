@@ -1,6 +1,8 @@
 utilities
 =========
 
+At the moment both of the following utilities are written in **Python 3.3.** I hope to create a Python 2.7 version of pagealigner in the early days of 2015.
+
 xmlparser.py
 ------------
 Extracts tabular metadata from collections of MARCxml in the format typically provided by HathiTrust.

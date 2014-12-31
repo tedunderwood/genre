@@ -3,9 +3,9 @@
 # Utility module for aligning page-level metadata predictions
 # produced at the University of Illinois with HathiTrust data,
 # in the form of pages concatenated in a .zip file, or
-# (eventually) a file of extracted page-level features.
+# a file of extracted page-level features.
 
-# This is version 1.0 of pagealigner,
+# This is version 1.1 of pagealigner,
 # written in Python 3.3.5, in December 2014.
 
 # It's designed to work with the first release of
@@ -16,28 +16,36 @@
 
 # You can use the Alignment class in this module
 # to create a generator that will
-# align a whole list of volumes with genre predictions and then
+# align a whole list of volumes with genre predictions and
 # yield them back to you one by one. Because Alignment returns a
 # generator, you can use it to iterate across a large set
 # of volumes without any fear that you'll bust through
 # memory limitations by loading them all at once.
 #
-# The generator returns a three-tuple (volumeid, successflag, volume).
+# Each iteration of the generator returns a three-tuple
+#       (volumeid, successflag, volume).
 # The successflag is there to tell you what went wrong, if something
-# goes wrong. For instance it could say "missing data file" or
+# does go wrong. For instance it could say "missing data file" or
 # "missing genre prediction" or "mismatched lengths."
 #
 # The volume is represented as a list of pages.
 #
 # Each page, in turn, is a twotuple, where the first element
 # in the tuple is the page text (in whatever format the datafile holds)
-# and the second is a genre code.
+# and the second is a genre code. See the report
+# "Understanding Genre in a Collection of a Million Volumes"
+# for explanations of the genre codes.
 #
 # USAGE:
-# If your genre predictions are in a subfolder (relative to
-# your main script) called /genrepredictions, and your
-# data files are HathiTrust zip files in a subfolder called
-# /data, this is super simple:
+# This module is not designed to be run as a main script.
+# The Alignment class is designed to be imported into another script
+# where it can be iterated across.
+#
+# If your genre predictions are untarred, and in a subfolder
+# (relative to your main script) called /genrepredictions, and your
+# data files are HathiTrust Research Center feature files
+# (untarred but not decompressed, with suffix .json.bz2)
+# in a subfolder called /data, this becomes super simple:
 #
 # from pagealigner import Alignment
 # alignedvols = Alignment(listofvolstoget)
@@ -54,8 +62,17 @@
 # If your genre predictions and data files are in other
 # folders, or if your data is in a different format, you'll
 # need to specify more parameters when you create
-# alignedvols. See the class definition of Alignment, below.
+# alignedvols.
+
+# For instance,
+#    alignedvols = Alignment(listofvols, genrepath = '/root/genretarfiles/', datapath = '/root/hathi/',
+#        datatype = 'ziptext', tarscompressed = True)
 #
+# looks for genre and data files in the specified folders, and assumes the genre
+# predictions are still packed up as .tar.gz files, and expects the data files
+# to be HathiTrust zip files rather than HTRC extracted-feature files.
+
+# For more details, see the class definition of Alignment, below.
 
 from zipfile import ZipFile
 from collections import namedtuple
@@ -173,42 +190,6 @@ def get_genre_index(tarpaths, volidstoget):
                     # tar.gz file provided
 
     return pathdictionary
-
-# DEPRECATED:
-# def get_data_index(datafolder, datalocations, volidstoget):
-#     '''This function returns a dictionary that maps each id,
-#     if found, to its location in the provided datafolder.
-#     '''
-
-#     pathdictionary = dict()
-
-#     for thisid in volidstoget:
-#         expectedpath = os.path.join(datafolder, thisid + '.zip')
-#         if expectedpath in datalocations:
-#             pathdictionary[thisid] = expectedpath
-
-#     return pathdictionary
-
-# def get_genrefolder_index(folder, locations, volidstoget, suffix):
-#     '''This function returns a dictionary that maps each id,
-#     if found, to its location in the provided genrefolder.
-#     '''
-
-#     pathdictionary = dict()
-
-#     for thisid in volidstoget:
-#         expectedpath = os.path.join(folder, thisid + suffix)
-#         if expectedpath in locations:
-#             pathdictionary[thisid] = expectedpath
-#         else:
-#             alternateid = thisid.replace(',','.')
-#             alternateid = alternateid.replace('+', ':')
-#             alternateid = alternateid.replace('=', '/')
-#             expectedpath = os.path.join(folder, alternateid + suffix)
-#             if expectedpath in locations:
-#                 pathdictionary[thisid] = expectedpath
-
-#     return pathdictionary
 
 def read_tarfile(tarpath, filename):
     tarfound = True
@@ -455,8 +436,4 @@ if __name__ == '__main__':
     for volid, flag, volume in alignedvols:
         print(volid + " " + flag)
         print(len(volume))
-
-
-
-
 
