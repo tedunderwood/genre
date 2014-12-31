@@ -22,9 +22,15 @@
 # of volumes without any fear that you'll bust through
 # memory limitations by loading them all at once.
 #
-# The generator returns volumes as a list of pages.
-# Each page, in turn, is a tuple, where the first element
-# in the tuple is the page text (in whatever format it was provided)
+# The generator returns a three-tuple (volumeid, successflag, volume).
+# The successflag is there to tell you what went wrong, if something
+# goes wrong. For instance it could say "missing data file" or
+# "missing genre prediction" or "mismatched lengths."
+#
+# The volume is represented as a list of pages.
+#
+# Each page, in turn, is a twotuple, where the first element
+# in the tuple is the page text (in whatever format the datafile holds)
 # and the second is a genre code.
 #
 # USAGE:
@@ -35,7 +41,10 @@
 #
 # from pagealigner import Alignment
 # alignedvols = Alignment(listofvolstoget)
-# for volume in alignedvols:
+# for volid, successflag, volume in alignedvols:
+#     if successflag != "success":
+#         print(successflag + " in " + volid)
+#         continue
 #     for page in volume:
 #         text = page[0]
 #         genre = page[1]
@@ -96,6 +105,27 @@ def read_zip(filepath):
 
     return pagelist, successflag
 
+def make_mapping(idstoget):
+    ''' Creates a dictionary that maps multiple versions of a volume ID
+    onto the provided original volume ID.
+    '''
+
+    iddictionary = dict()
+    allids = set()
+    for anid in idstoget:
+        iddictionary[anid] = anid
+
+        alternateid = anid.replace(',','.')
+        iddictionary[alternateid] = anid
+        allids.add(alternateid)
+
+        alternateid = alternateid.replace('+', ':')
+        alternateid = alternateid.replace('=', '/')
+        iddictionary[alternateid] = anid
+        allids.add(alternateid)
+
+    return iddictionary, allids
+
 def get_genre_index(tarpaths, volidstoget):
     '''Given a list of tarfiles and a list of volume ids to get,
     this function returns a dictionary that maps each id,
@@ -116,19 +146,7 @@ def get_genre_index(tarpaths, volidstoget):
 
     # To tolerate multuple formats we'll create a mapping:
 
-    iddictionary = dict()
-    allids = set()
-    for anid in volidstoget:
-        iddictionary[anid] = anid
-
-        alternateid = anid.replace(',','.')
-        iddictionary[alternateid] = anid
-        allids.add(alternateid)
-
-        alternateid = alternateid.replace('+', ':')
-        alternateid = alternateid.replace('=', '/')
-        iddictionary[alternateid] = anid
-        allids.add(alternateid)
+    iddictionary, allids = make_mapping(volidstoget)
 
     for tarpath in tarpaths:
 
@@ -170,8 +188,60 @@ def get_data_index(datafolder, datalocations, volidstoget):
 
     return pathdictionary
 
-def get_volume(tarpath, filename, datatype, datapath):
+def get_genrefolder_index(folder, locations, volidstoget, suffix):
+    '''This function returns a dictionary that maps each id,
+    if found, to its location in the provided genrefolder.
     '''
+
+    pathdictionary = dict()
+
+    for thisid in volidstoget:
+        expectedpath = os.path.join(folder, thisid + suffix)
+        if expectedpath in locations:
+            pathdictionary[thisid] = expectedpath
+        else:
+            alternateid = thisid.replace(',','.')
+            alternateid = alternateid.replace('+', ':')
+            alternateid = alternateid.replace('=', '/')
+            expectedpath = os.path.join(folder, alternateid + suffix)
+            if expectedpath in locations:
+                pathdictionary[thisid] = expectedpath
+
+    return pathdictionary
+
+def read_tarfile(tarpath, filename):
+    tarfound = True
+
+    try:
+        with tarfile.open(tarpath, 'r:gz') as tar:
+            tardata = tar.extractfile(filename)
+            somebytes = tardata.read()
+            jsonstring = somebytes.decode('utf-8', 'strict')
+            jobj = json.loads(jsonstring)
+    except:
+        tarfound = False
+        jobj = dict()
+
+    return tarfound, jobj
+
+def read_ordinary_json(filepath):
+    with open(filepath, encoding = 'utf-8') as f:
+        jsonstring = f.read()
+
+    genrefound = True
+
+    try:
+        jobj = json.loads(jsonstring)
+    except:
+        genrefound = False
+        jobj = dict()
+
+    return genrefound, jobj
+
+
+def get_volume(tarpath, filename, datatype, datapath):
+    ''' This function actually does the aligning of data pages
+    with genre predictions.
     '''
 
     if datatype == 'ziptext':
@@ -182,18 +252,12 @@ def get_volume(tarpath, filename, datatype, datapath):
     if successflag != 'success':
         return successflag, []
 
-    tarfound = True
+    if len(tarpath) > 1:
+        genrefound, jobj = read_tarfile(tarpath, filename)
+    else:
+        genrefound, jobj = read_ordinary_json(filename)
 
-    #try:
-    with tarfile.open(tarpath, 'r:gz') as tar:
-        tardata = tar.extractfile(filename)
-        somebytes = tardata.read()
-        jsonstring = somebytes.decode('utf-8', 'strict')
-        jobj = json.loads(jsonstring)
-    #except:
-        #tarfound = False
-
-    if tarfound:
+    if genrefound:
         pagegenres = jobj['page_genres']
         if len(pagelist) == len(pagegenres):
             volume = list()
@@ -201,19 +265,81 @@ def get_volume(tarpath, filename, datatype, datapath):
             for i in range(numpages):
                 page = (pagelist[i], pagegenres[str(i)])
                 volume.append(page)
+                # Would be more pythonic to use zip here, I guess.
+
             return 'success', volume
         else:
             return 'mismatched lengths', []
 
     else:
-        return 'genre prediction not found', []
+        return 'missing genre prediction', []
+
+
+def gather_recursively(topfolder, suffix, idstoget):
+    ''' This walks all the subdirectories of a top-level folder,
+    looking for files that end with suffix, and that also belong
+    to the list idstoget. When it finds them, it adds them to a
+    dictionary that maps the volume ID to a complete filepath.
+
+    One complication is that HathiTrust volume IDs can be provided
+    in 'clean' or 'dirty' formats. We want to tolerate both. To do that
+    we create a mapping that translates several versions of each ID
+    to the version originally provided in idstoget.
+
+    If the list of idstoget is empty, this function returns all files
+    in the recursive walk.
+    '''
+
+    pathdictionary = dict()
+
+    # To tolerate multuple formats we'll create a mapping:
+
+    iddictionary, allids = make_mapping(idstoget)
+    if len(idstoget) < 1:
+        geteverything = True
+    else:
+        geteverything = False
+
+    for directory, subdirectories, files in os.walk(topfolder):
+        for afile in files:
+            if afile.endswith(suffix):
+                strippedid = afile.replace(suffix, '')
+                if strippedid in allids or geteverything:
+                    originalid = iddictionary[strippedid]
+                    pathdictionary[originalid] = os.path.join(directory, afile)
+
+    return pathdictionary
+
+def gather_idlist(topfolder, suffix):
+    ''' This walks all the subdirectories of a top-level folder,
+    looking for files that end with suffix; it ads them as ids.
+    '''
+
+    idlist = list()
+
+    for directory, subdirectories, files in os.walk(topfolder):
+        for afile in files:
+            if afile.endswith(suffix):
+                strippedid = afile.replace(suffix, '')
+                idlist.append(strippedid)
+
+    return idlist
 
 class Alignment:
 
-    def __init__(self, idstoget, genrepath = 'genrepredictions', datapath = 'data', datatype = 'ziptext'):
+    # By default this looks for genre prediction files in a local subfolder called /genrepredictions,
+    # and data files (of whatever type) in a local subfolder called /data. You can override those
+    # defaults, but if you do, you need to provide complete paths.
+    #
+    # By default this assumes the tar.gz files containing predictions have been decompressed. They
+    # don't all have to be located in a single folder; you can have multiple prediction folders under
+    # one parent.
+
+    def __init__(self, idstoget, genrepath = 'genrepredictions', datapath = 'data', datatype = 'ziptext', tarscompressed = False):
         self.idstoget = idstoget
         self.datatype = datatype
         self.rootdir = os.path.dirname(sys.argv[0])
+        self.tarscompressed = tarscompressed
 
         if genrepath == 'genrepredictions':
             self._genrefolder = os.path.join(self.rootdir, 'genrepredictions')
@@ -223,9 +349,13 @@ class Alignment:
         if datapath == 'data':
             self._datafolder = os.path.join(self.rootdir, 'data')
         else:
-            self._genrefolder = datapath
+            self._datafolder = datapath
 
-        self._tarfiles = glob.glob(os.path.join(self._genrefolder, '*.tar.gz'))
+        if self.tarscompressed:
+            tarfiles = glob.glob(os.path.join(self._genrefolder, '*.tar.gz'))
+            self.genrelocations = get_genre_index(tarfiles, idstoget)
+        else:
+            self.genrelocations = gather_recursively(self._genrefolder, '.json', self.idstoget)
 
         if self.datatype == 'ziptext':
             self._datafiles = glob.glob(os.path.join(self._datafolder, '*.zip'))
@@ -233,29 +363,46 @@ class Alignment:
             print('Fatal: data types other than ziptext are not yet implemented.')
             sys.exit(0)
 
-        self.genrelocations = get_genre_index(self._tarfiles, idstoget)
         self.datalocations = get_data_index(self._datafolder, self._datafiles, idstoget)
 
     def __iter__(self):
 
         for volid in self.idstoget:
             if volid in self.genrelocations and volid in self.datalocations:
-                tarpath, filename = self.genrelocations[volid]
+
+                if self.tarscompressed:
+                    tarpath, filename = self.genrelocations[volid]
+                else:
+                    filename = self.genrelocations[volid]
+                    tarpath = ""
+
                 datapath = self.datalocations[volid]
                 successflag, volume = get_volume(tarpath, filename, self.datatype, datapath)
+
             elif volid in self.genrelocations:
                 successflag, volume = 'missing data', []
             else:
                 successflag, volume = 'genre prediction not found', []
 
-            yield successflag, volume
+            yield volid, successflag, volume
 
 
 if __name__ == '__main__':
-    idstoget = [x.replace('.zip', '') for x in os.listdir('/Users/tunder/work/genre/utilities/data/') if x.endswith('.zip')]
-    alignedvols = Alignment(idstoget, genrepath = '/Users/tunder/holding/')
-    for flag, volume in alignedvols:
-        print(flag)
+    # This is really just for purposes of testing. This is not designed to be
+    # used as a main script; the idea is that you'll import Alignment in your
+    # own script and use it as a generator to iterate across volumes, where
+    # each volume contains pages zipped to genres.
+
+    datafolder = input("Path to directory holding your data files? ")
+    # This can actually be the root directory of a pairtree structure, if you want to
+    # get all the data files.
+    idstoget = gather_idlist(datafolder, '.zip')
+
+    genrefolder = input("Path to directory holding uncompressed genre predictions? ")
+    alignedvols = Alignment(idstoget, genrepath = genrefolder, datapath = datafolder, tarscompressed = False)
+
+    for volid, flag, volume in alignedvols:
+        print(volid + " " + flag)
         print(len(volume))
 
 
