@@ -59,7 +59,7 @@
 
 from zipfile import ZipFile
 from collections import namedtuple
-import tarfile, json, os, glob, sys
+import tarfile, json, os, glob, sys, bz2
 
 def read_zip(filepath):
     ''' Given a path to a HathiTrust zip file, this returns
@@ -174,40 +174,41 @@ def get_genre_index(tarpaths, volidstoget):
 
     return pathdictionary
 
-def get_data_index(datafolder, datalocations, volidstoget):
-    '''This function returns a dictionary that maps each id,
-    if found, to its location in the provided datafolder.
-    '''
+# DEPRECATED:
+# def get_data_index(datafolder, datalocations, volidstoget):
+#     '''This function returns a dictionary that maps each id,
+#     if found, to its location in the provided datafolder.
+#     '''
 
-    pathdictionary = dict()
+#     pathdictionary = dict()
 
-    for thisid in volidstoget:
-        expectedpath = os.path.join(datafolder, thisid + '.zip')
-        if expectedpath in datalocations:
-            pathdictionary[thisid] = expectedpath
+#     for thisid in volidstoget:
+#         expectedpath = os.path.join(datafolder, thisid + '.zip')
+#         if expectedpath in datalocations:
+#             pathdictionary[thisid] = expectedpath
 
-    return pathdictionary
+#     return pathdictionary
 
-def get_genrefolder_index(folder, locations, volidstoget, suffix):
-    '''This function returns a dictionary that maps each id,
-    if found, to its location in the provided genrefolder.
-    '''
+# def get_genrefolder_index(folder, locations, volidstoget, suffix):
+#     '''This function returns a dictionary that maps each id,
+#     if found, to its location in the provided genrefolder.
+#     '''
 
-    pathdictionary = dict()
+#     pathdictionary = dict()
 
-    for thisid in volidstoget:
-        expectedpath = os.path.join(folder, thisid + suffix)
-        if expectedpath in locations:
-            pathdictionary[thisid] = expectedpath
-        else:
-            alternateid = thisid.replace(',','.')
-            alternateid = alternateid.replace('+', ':')
-            alternateid = alternateid.replace('=', '/')
-            expectedpath = os.path.join(folder, alternateid + suffix)
-            if expectedpath in locations:
-                pathdictionary[thisid] = expectedpath
+#     for thisid in volidstoget:
+#         expectedpath = os.path.join(folder, thisid + suffix)
+#         if expectedpath in locations:
+#             pathdictionary[thisid] = expectedpath
+#         else:
+#             alternateid = thisid.replace(',','.')
+#             alternateid = alternateid.replace('+', ':')
+#             alternateid = alternateid.replace('=', '/')
+#             expectedpath = os.path.join(folder, alternateid + suffix)
+#             if expectedpath in locations:
+#                 pathdictionary[thisid] = expectedpath
 
-    return pathdictionary
+#     return pathdictionary
 
 def read_tarfile(tarpath, filename):
     tarfound = True
@@ -238,6 +239,35 @@ def read_ordinary_json(filepath):
 
     return genrefound, jobj
 
+def read_bz2(filepath):
+    ''' This opens a bzip file, assuming that it contains a HathiTrust
+    feature JSON, and extracts a list of pages.
+    '''
+    successflag = 'success'
+
+    try:
+        with bz2.open(filepath, mode='rt', encoding = 'utf-8') as f:
+            jsonstring = f.read()
+    except:
+        successflag = 'bzip2 failed'
+        jsonstring = ''
+
+    try:
+        jobj = json.loads(jsonstring)
+    except:
+        successflag = 'json decoding failed'
+        jobj = dict()
+
+    try:
+        pagelist = jobj['features']['pages']
+    except:
+        if successflag == 'success':
+            successflag = 'json format unexpected'
+        pagelist = []
+        # If statement because we don't want to overwrite previous failures.
+
+    return pagelist, successflag
+
 
 def get_volume(tarpath, filename, datatype, datapath):
     ''' This function actually does the aligning of data pages
@@ -246,6 +276,8 @@ def get_volume(tarpath, filename, datatype, datapath):
 
     if datatype == 'ziptext':
         pagelist, successflag = read_zip(datapath)
+    elif datatype == 'htrc1':
+        pagelist, successflag = read_bz2(datapath)
     else:
         pagelist, successflag = [], 'missing file type'
 
@@ -275,7 +307,7 @@ def get_volume(tarpath, filename, datatype, datapath):
         return 'missing genre prediction', []
 
 
-def gather_recursively(topfolder, suffix, idstoget):
+def walk2pathdictionary(topfolder, suffix, idstoget):
     ''' This walks all the subdirectories of a top-level folder,
     looking for files that end with suffix, and that also belong
     to the list idstoget. When it finds them, it adds them to a
@@ -335,35 +367,47 @@ class Alignment:
     # don't all have to be located in a single folder; you can have multiple prediction folders under
     # one parent.
 
-    def __init__(self, idstoget, genrepath = 'genrepredictions', datapath = 'data', datatype = 'ziptext', tarscompressed = False):
+    def __init__(self, idstoget, genrepath = 'genrepredictions', datapath = 'data', datatype = 'htrc1', tarscompressed = False):
+
+        # Initialize fields of this object.
         self.idstoget = idstoget
         self.datatype = datatype
         self.rootdir = os.path.dirname(sys.argv[0])
         self.tarscompressed = tarscompressed
+
+        # Figure out the root folder for genres.
 
         if genrepath == 'genrepredictions':
             self._genrefolder = os.path.join(self.rootdir, 'genrepredictions')
         else:
             self._genrefolder = genrepath
 
-        if datapath == 'data':
-            self._datafolder = os.path.join(self.rootdir, 'data')
-        else:
-            self._datafolder = datapath
+        # Then create a dictionary that maps volume IDs to the path where their
+        # genre predictions are located.
 
         if self.tarscompressed:
             tarfiles = glob.glob(os.path.join(self._genrefolder, '*.tar.gz'))
             self.genrelocations = get_genre_index(tarfiles, idstoget)
         else:
-            self.genrelocations = gather_recursively(self._genrefolder, '.json', self.idstoget)
+            self.genrelocations = walk2pathdictionary(self._genrefolder, '.json', self.idstoget)
+
+        # Figure out the root folder for data files.
+
+        if datapath == 'data':
+            self._datafolder = os.path.join(self.rootdir, 'data')
+        else:
+            self._datafolder = datapath
+
+        # Then create a dictionary that maps volumeIDs to the path where the
+        # appropriate data file is located.
 
         if self.datatype == 'ziptext':
-            self._datafiles = glob.glob(os.path.join(self._datafolder, '*.zip'))
+            self.datalocations = walk2pathdictionary(self._datafolder, '.zip', self.idstoget)
+        elif self.datatype == 'htrc1':
+            self.datalocations = walk2pathdictionary(self._datafolder, '.json.bz2', self.idstoget)
         else:
-            print('Fatal: data types other than ziptext are not yet implemented.')
+            print('Fatal: data types other than ziptext and htrc1 are not yet implemented.')
             sys.exit(0)
-
-        self.datalocations = get_data_index(self._datafolder, self._datafiles, idstoget)
 
     def __iter__(self):
 
@@ -396,10 +440,17 @@ if __name__ == '__main__':
     datafolder = input("Path to directory holding your data files? ")
     # This can actually be the root directory of a pairtree structure, if you want to
     # get all the data files.
-    idstoget = gather_idlist(datafolder, '.zip')
+    if datafolder == "test":
+        with open('/Users/tunder/work/genre/utilities/testset.txt', encoding = 'utf-8') as f:
+            idstoget = [x.rstrip() for x in f.readlines()]
+            datafolder = '/Volumes/TARDIS/outmaps/1880-1889 2/loc/'
+            datatype = 'htrc1'
+    else:
+        idstoget = gather_idlist(datafolder, '.zip')
+        datatype = 'ziptext'
 
     genrefolder = input("Path to directory holding uncompressed genre predictions? ")
-    alignedvols = Alignment(idstoget, genrepath = genrefolder, datapath = datafolder, tarscompressed = False)
+    alignedvols = Alignment(idstoget, genrepath = genrefolder, datapath = datafolder, datatype = datatype, tarscompressed = False)
 
     for volid, flag, volume in alignedvols:
         print(volid + " " + flag)
