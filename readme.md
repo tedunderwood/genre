@@ -5,7 +5,11 @@ Public repository for documents and code associated with the project "Understand
 
 Some of these materials were originally developed in other repositories, so you'll find that subfolders often include links pointing back to the original repo. This should only matter if you want to trace development history.
 
-The general workflow here moves from browser -> munging-> features -> pages -> confidencefilter
+The workflow we followed moves from browser -> munging-> features -> pages -> confidencefilter.
+
+But probably most users of this repo will be primarily interested in the [utilities](https://github.com/tedunderwood/genre/tree/master/utilities) subfolder, which contains Python utilities that can be used to align these genre predictions with HTRC feature files or HathiTrust zip files.
+
+For fuller documentation, see [the interim project report.](http://figshare.com/articles/Understanding_Genre_in_a_Collection_of_a_Million_Volumes_Interim_Report/1281251)
 
 browser
 -------
