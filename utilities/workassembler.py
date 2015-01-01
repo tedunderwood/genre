@@ -127,7 +127,7 @@ def output_work(thiswork, workid, removeheaders, outputmode, outputfolder):
 
         outpath = os.path.joinc(outputfolder, 'malletsource.txt')
 
-        with open(outpath, mode = 'a', encoding = 'utf-8')
+        with open(outpath, mode = 'a', encoding = 'utf-8'):
 
             for idx, chunk in enumerate(tenchunks):
                 chunkid = workid + '|' + str(idx)

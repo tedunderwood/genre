@@ -255,7 +255,7 @@ def get_volume(tarpath, filename, datatype, datapath):
     with genre predictions.
     '''
 
-    if datatype == 'ziptext':
+    if datatype == 'ziptext' or datatype == 'pairtree':
         pagelist, successflag = read_zip(datapath)
     elif datatype == 'htrc1':
         pagelist, successflag = read_bz2(datapath)
@@ -338,6 +338,45 @@ def gather_idlist(topfolder, suffix):
 
     return idlist
 
+def pairtreepath(htid,rootpath):
+    ''' Given a HathiTrust volume id, returns a relative path to that
+    volume. While the postfix is part of the path, it's also useful to
+    return it separately since it can be a folder/filename in its own
+    right.'''
+
+    period = htid.find('.')
+    prefix = htid[0:period]
+    postfix = htid[(period+1): ]
+    if ':' in postfix:
+        postfix = postfix.replace(':','+')
+        postfix = postfix.replace('/','=')
+    if '.' in postfix:
+        postfix = postfix.replace('.',',')
+    path = rootpath + prefix + '/pairtree_root/'
+
+    if len(postfix) % 2 != 0:
+        for i in range(0, len(postfix) - 2, 2):
+            next_two = postfix[i: (i+2)]
+            path = path + next_two + '/'
+        path = path + postfix[-1] + '/'
+    else:
+        for i in range(0, len(postfix), 2):
+            next_two = postfix[i: (i+2)]
+            path = path + next_two + '/'
+
+    return path, postfix
+
+def pairtreedict(listofhtids, rootpath):
+    pathdictionary = dict()
+
+    for anid in listofhtids:
+        filepath, postfix = pairtreepath(anid, rootpath)
+        filename = filepath + postfix + '/' + postfix + ".zip"
+        if os.path.isfile(filename):
+            pathdictionary[anid] = filename
+
+    return pathdictionary
+
 class Alignment:
 
     # By default this looks for genre prediction files in a local subfolder called /genrepredictions,
@@ -386,6 +425,10 @@ class Alignment:
             self.datalocations = walk2pathdictionary(self._datafolder, '.zip', self.idstoget)
         elif self.datatype == 'htrc1':
             self.datalocations = walk2pathdictionary(self._datafolder, '.json.bz2', self.idstoget)
+        elif self.datatype == 'pairtree':
+            if not self._datafolder.endswith('/'):
+                self._datafolder = self._datafolder + '/'
+            self.datalocations = pairtreedict(self.idstoget, self._datafolder)
         else:
             print('Fatal: data types other than ziptext and htrc1 are not yet implemented.')
             sys.exit(0)
