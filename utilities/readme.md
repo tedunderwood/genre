@@ -94,3 +94,8 @@ For instance,
 looks for genre and data files in the specified folders, and assumes the genre
 predictions are still packed up as .tar.gz files, and expects the data files
 to be HathiTrust zip files rather than HTRC extracted-feature files.
+
+workassembler
+-------------
+Pay no attention to the scripts behind this curtain. They include header and argumentparser. These are parts of a thing that is still under development.
+
