@@ -20,6 +20,13 @@
 #
 # Finally, it can optionally remove
 # running headers.
+#
+# USAGE:
+# py3 workassembler.py -rh -o /projects/ichass/usesofscale/code/assemble -genre fic -pairroot /projects/ichass/usesofscale/nonserials/ -workjson 100novels.json
+#
+# Here py3 is an alias to my installation of python3.4
+# You can use python3, but note that the campus
+# cluster installation of python3 may lack the bz2 module!
 
 def gethelp():
     print('Allowable command-line options include:')
@@ -51,6 +58,16 @@ import os, sys, csv, json
 import argumentparser
 import header
 from pagealigner import Alignment
+
+punctuple = ('-', '.', ',', '?', '!', ';', '"', '“', '”', ':', '--', '—', ')', '(', "'", "`", "[", "]", "{", "}")
+
+with open('MainDictionary.txt', encoding = 'utf-8') as file:
+    filelines = file.readlines()
+lexicon = dict()
+for line in filelines:
+    line = line.strip()
+    fields = line.split('\t')
+    lexicon[fields[0]] = int(fields[2])
 
 def parsevols(filepath):
     with open(filepath, encoding = 'utf-8') as f:
@@ -103,11 +120,73 @@ def slice_list(input, size):
     for i in range(size):
         result.append([])
         for j in range(slice_size):
-            result[i].append(iterator.next())
+            result[i].append(next(iterator))
         if remain:
-            result[i].append(iterator.next())
+            result[i].append(next(iterator))
             remain -= 1
     return result
+
+def wordfreq(astring):
+    global lexicon
+
+    if astring in lexicon:
+        return lexicon[astring]
+    else:
+        return 0
+
+def strip_punctuation(astring):
+    global punctuple
+    keepclipping = True
+
+    while keepclipping == True and len(astring) > 1:
+        keepclipping = False
+        if astring.endswith(punctuple):
+            astring = astring[:-1]
+            keepclipping = True
+
+    keepclipping = True
+    while keepclipping == True and len(astring) > 1:
+        keepclipping = False
+        if astring.startswith(punctuple):
+            astring = astring[1:]
+            keepclipping = True
+
+    return astring
+
+def rejoin_hyphens(linelist):
+    newlist = list()
+    prevline = ""
+
+    for i in range(len(linelist)):
+        line = linelist[i].strip()
+        if len(line) < 1:
+            continue
+
+        line = line.lower()
+        line = line.replace('\t', ' ')
+
+        if prevline.endswith('-') or prevline.endswith('—'):
+            prevtokens = prevline.split()
+            thesetokens = line.split()
+
+            if len(prevtokens) > 0 and len(thesetokens) > 0:
+
+                lastword = strip_punctuation(prevtokens[-1])
+                nextword = strip_punctuation(thesetokens[0])
+
+                if ((wordfreq(lastword) + wordfreq(nextword)) / 3) < wordfreq(lastword + nextword):
+                    prevtokens.pop(-1)
+                    thesetokens.pop(0)
+                    prevtokens.append(lastword + nextword)
+                    prevline = ' '.join(prevtokens)
+                    line = ' '.join(thesetokens)
+
+        newlist.append(prevline)
+        prevline = line
+
+    newlist.append(prevline)
+
+    return newlist
 
 def output_work(thiswork, workid, removeheaders, outputmode, outputfolder):
 
@@ -119,24 +198,19 @@ def output_work(thiswork, workid, removeheaders, outputmode, outputfolder):
 
         linelist = list()
         for page in thiswork:
-            # remove empty lines
-            page = [x for x in page if ( x != '\n' and len(x) > 0 )]
             linelist.extend(page)
+
+        linelist = rejoin_hyphens(linelist)
 
         tenchunks = slice_list(linelist, 10)
 
-        outpath = os.path.joinc(outputfolder, 'malletsource.txt')
+        outpath = os.path.join(outputfolder, 'malletsource.txt')
 
-        with open(outpath, mode = 'a', encoding = 'utf-8'):
+        with open(outpath, mode = 'a', encoding = 'utf-8') as f:
 
             for idx, chunk in enumerate(tenchunks):
                 chunkid = workid + '|' + str(idx)
-                for i in range(len(chunk)):
-                    chunk[i] = chunk[i].replace('\n', ' ')
-                    chunk[i] = chunk[i].replace('\t', ' ')
-                    chunk[i] = chunk[i].replace(' the ', ' ')
                 outline = chunkid + '\t' + 'null' + '\t' + ' '.join(chunk) + '\n'
-
                 f.write(outline)
 
 def main(argdict):
@@ -217,10 +291,10 @@ def main(argdict):
             thiswork.extend(filteredvol)
 
         else:
-            thiswork.extend(filteredvol)
-            output_work(thiswork, workid, removeheaders, outputmode, outputfolder)
+            output_work(thiswork, lastworkid, removeheaders, outputmode, outputfolder)
             thiswork = list()
             lastworkid = workid
+            thiswork.extend(filteredvol)
 
     with open('failedvolumes.tsv', mode = 'w', encoding = 'utf-8') as f:
         for volume, flag in failedvolumes:
