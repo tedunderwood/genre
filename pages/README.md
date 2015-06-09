@@ -29,4 +29,6 @@ This subfolder contains javadocs for the pages package. Not browsable from withi
 
 class descriptions
 ------------------
-Coming soon!
+The main class is MapPages.java, and that class contains instructions for use.
+
+More coming soon!
