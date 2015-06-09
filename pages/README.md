@@ -29,6 +29,6 @@ This subfolder contains javadocs for the pages package. Not browsable from withi
 
 class descriptions
 ------------------
-The main class is MapPages.java, and that class contains instructions for use.
+The main class is MapPages.java, and that class contains instructions for use. For more documentation see the JavaDocs under the /doc folder. The index.html file under /doc will give you access to the whole documentation tree.
 
 More coming soon!
