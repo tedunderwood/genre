@@ -11,6 +11,10 @@ But probably most users of this repo will be primarily interested in the [utilit
 
 For fuller documentation, see [the interim project report.](http://figshare.com/articles/Understanding_Genre_in_a_Collection_of_a_Million_Volumes_Interim_Report/1281251)
 
+1700-1899features and 1900-1922features
+---------------------------------------
+Training data we used to create two models. The 1900-1922 folder actually contains a lot of earlier training data; we overlapped the two models.
+
 browser
 -------
 A GUI we used to create page-level training data. Saves data in ARFF format. Written by Michael L. Black and Boris Capitanu.
